@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Based Media Player</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <header><button id="listFilesBtn"><img  class="icon" src="home.png"><p>Home</p></button></header>
+    <div id="filelist">
+        <h1 class="original">Files</h1>
+        <button id="delete"><img src="delete.png" class="icon"></button>
+        <ul id="files">
+            <!-- Files will be dynamically added here -->
+        </ul>
+        
+    </div>
+
+    <div id="player">
+        <video id="video" controls style="display: none;"></video>
+        <audio id="audio" controls style="display: none;"></audio>
+        <div id="controls">
+            <button id="backward"><img src="backward.png" class="icon"></button>
+            <button id="forward"><img src="forward.png" class="icon" ></button>
+          
+        </div>
+       
+    </div>
+
+    <div id="fileinfo">
+        <h1 class="original">File Info:</h1>
+        <p>File Name: <span id="filename"></span></p>
+        <p>File Size: <span id="filesize"></span></p>
+        <p>File Type: <span id="filetype"></span></p>
+        <p>File Date: <span id="filedate"></span></p>
+      
+        <a href="welcome.html"><button id="exit"><img src="logout.png" class="icon"></button></a>
+    </div>
+
+
+
+    <script src="main.js"></script>
+</body>
+</html>
