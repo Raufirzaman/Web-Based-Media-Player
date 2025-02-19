@@ -24,7 +24,7 @@ This **Web-Based Media Player** allows users to browse, select, and play media f
 ## 📚 Installation & Usage
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/web-based-media-player.git
+   git clone https://github.com/Raufirzaman/Web-Based-Media-Player.git
 2. **Open the project folder and launch welcome.html in a web browser.**
 3. **Click on Select Directory to choose a folder containing media files.**
 4. **Double-click a file to play it!**
