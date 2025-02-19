@@ -23,7 +23,7 @@ This **Web-Based Media Player** allows users to browse, select, and play media f
 ## 🛠️ Technologies Used
 - **HTML** - Structure of the web page
 - **CSS** - Styling and layout design
-- **JavaScript** - File handling, media playback, and user interaction
+- **JavaScript** - File handling, media playback and user interaction
 
 ## 📚 Installation & Usage
 1. **Clone the repository:**
