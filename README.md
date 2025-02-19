@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/de34761e-f4e0-412f-8dce-9e019bd0e73a
+
 # Web-Based Media Player
 
 ## 🎬 About the Project
@@ -31,11 +35,11 @@ This **Web-Based Media Player** allows users to browse, select, and play media f
 
 ## 📸 Screenshots
 **Welcome Interface**
-![](https://ibb.co.com/Kx85fDfM)
+![Screenshot 2025-02-20 002614](https://github.com/user-attachments/assets/d923e34e-6df4-4c3f-b28e-cb5d24879745)
 **File Selection**
-![](https://ibb.co.com/qFXxQZmQ)
+![Screenshot 2025-02-20 002658](https://github.com/user-attachments/assets/357ea28d-3ca1-4c82-8a12-0d70862803ca)
 **Media Playback**
-![](https://ibb.co.com/CsH9DpyC)
+![Screenshot 2025-02-20 002722](https://github.com/user-attachments/assets/37ee4c21-40db-4800-914d-5f1383a3c158)
 
 ## 🤝 Contributing
 Contributions are welcome! Feel free to fork the repository and submit a pull request.
@@ -45,7 +49,7 @@ This project is open-source and available under the **GNU General Public License
 
 ## 💌 Contact
 For any questions or suggestions, reach out via:
-* **📧 Email:** raufir@gmail.com
+* **📧 Email:** raufir7@gmail.com
 * **📍 Location:** Barishal, Bangladesh
 ___
 
