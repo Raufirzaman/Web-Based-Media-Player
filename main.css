@@ -23,12 +23,12 @@ button {
 }
 
 button:hover {
-    background-color: #00DFA2;
+    background-color: #019870;
     transition: 0.9s;
 }
 
 body {
-    background:linear-gradient(90deg, #0079FF 0%, #00DFA2 33%, #F6FA70 66%, #FF0060 100%);
+    background-color: #00DFA2 ;
 
     display: flex;
     flex-direction: column;  
@@ -62,7 +62,7 @@ body {
 }
 
 #listFilesBtn:hover {
-    background-color: #00DFA2;
+    background-color: #02a177;
     transition: 0.9s;
 }
 

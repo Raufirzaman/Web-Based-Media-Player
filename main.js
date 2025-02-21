@@ -89,7 +89,7 @@ async function listFiles(directoryHandle = null) {
                     let mediaElement;
                     if (file.type.startsWith("video/")) {
                         mediaElement = document.getElementById("video");
-                        document.getElementById("audio").style.display = "none";
+                        document.getElementById("audio").style.display = "none" ;
                         document.getElementById("video").style.display = "block";
                     } else if (file.type.startsWith("audio/")) {
                         mediaElement = document.getElementById("audio");
