@@ -27,7 +27,7 @@ This **Web-Based Media Player** allows users to browse, select, and play media f
 
 ## 📚 Installation & Usage
 1. **Go to https://wbms.vercel.app .**
-2. **Click on Select Directory to choose a folder containing media files.**
+2. **Click on Select button to choose a folder containing media files.**
 3. **Click on Home Button & select the same directory for surity.**
 4. **Double-click a file from left side to play it!**
 5. **For selecting a new directory ,press the button of screen's bottom.**
