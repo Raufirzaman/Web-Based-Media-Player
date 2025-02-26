@@ -31,7 +31,9 @@ This **Web-Based Media Player** allows users to browse, select, and play media f
    git clone https://github.com/Raufirzaman/Web-Based-Media-Player.git
 2. **Open the project folder and launch welcome.html in a web browser.**
 3. **Click on Select Directory to choose a folder containing media files.**
-4. **Double-click a file to play it!**
+4. **Click on Home Button & select the same directory for surity.**
+5. **Double-click a file from left side to play it!**
+6. **For selecting a new directory ,press the button of screen's bottom.**
 
 ## 📸 Screenshots
 **Welcome Interface**
