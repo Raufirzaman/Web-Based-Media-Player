@@ -26,6 +26,44 @@ async function getDirectoryHandle() {
     return null;
 }
 
+
+function getfreq(mediaElement) {
+    const audioContext = new AudioContext();
+    const sourceNode = audioContext.createMediaElementSource(mediaElement);
+    const analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 256; // Adjust FFT size for better visualization
+
+    const bufferLength = analyserNode.frequencyBinCount;
+    const amplitudeArray = new Uint8Array(bufferLength);
+
+    sourceNode.connect(analyserNode);
+    analyserNode.connect(audioContext.destination);
+
+    const canvasElt = document.getElementById("canvas");
+    const canvasContext = canvasElt.getContext("2d");
+
+    function draw() {
+        requestAnimationFrame(draw);
+        analyserNode.getByteFrequencyData(amplitudeArray);
+    
+        canvasContext.clearRect(0, 0, canvasElt.width, canvasElt.height);
+        canvasContext.fillStyle = "yellow";
+    
+        const barWidth = canvasElt.width / bufferLength; // Dynamic bar width
+        const centerX = canvasElt.width / 2; // Find the center of the canvas
+    
+        for (let i = 0; i < bufferLength; i++) {
+            const barHeight = (amplitudeArray[i] / 256) * canvasElt.height;
+            const x = centerX + (i - bufferLength / 2) * barWidth; // Center the bars
+            canvasContext.fillRect(x, canvasElt.height - barHeight, barWidth - 1, barHeight);
+        }
+    }
+    
+
+    draw();
+}
+
+
 // Function to list files in the directory
 async function listFiles(directoryHandle = null) {
     if (!directoryHandle) {
@@ -90,10 +128,15 @@ async function listFiles(directoryHandle = null) {
                     if (file.type.startsWith("video/")) {
                         mediaElement = document.getElementById("video");
                         document.getElementById("audio").style.display = "none" ;
+                        document.getElementById("audio").pause();
                         document.getElementById("video").style.display = "block";
+                        document.getElementById("canvas").style.display = "none";
                     } else if (file.type.startsWith("audio/")) {
                         mediaElement = document.getElementById("audio");
+                        document.getElementById("canvas").style.display = "block";
+                        getfreq(mediaElement);
                         document.getElementById("video").style.display = "none";
+                        document.getElementById("video").pause();
                         document.getElementById("audio").style.display = "block";
                     }
 
