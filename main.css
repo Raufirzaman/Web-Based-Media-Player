@@ -217,13 +217,77 @@ audio{
     
 }
 
-#delete{
-    background-color: #FF0060;
-    width: 70%;
-    border-radius: 10px;
-    align-self: center;
-    justify-self: center;
+/* File controls container */
+#fileControls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
 }
-#delete:hover{
-    background-color: #020c1778;
+
+/* Folder navigation buttons with arrow symbols */
+#folderBackBtn, #folderForwardBtn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid #0079FF;
+    background-color: #0079FF;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#folderBackBtn:hover:not(:disabled), 
+#folderForwardBtn:hover:not(:disabled) {
+    background-color: #02a177;
+    border-color: #02a177;
+    transform: scale(1.1);
+}
+
+#folderBackBtn:disabled, 
+#folderForwardBtn:disabled {
+    background-color: #cccccc;
+    border-color: #999999;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+#folderBackBtn:active:not(:disabled), 
+#folderForwardBtn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+/* Delete button styling to match navigation buttons */
+#delete {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid #FF4444;
+    background-color: #FF4444;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#delete:hover {
+    background-color: #CC0000;
+    border-color: #CC0000;
+    transform: scale(1.1);
+}
+
+#delete:active {
+    transform: scale(0.95);
+}
+
+#delete .icon {
+    width: 24px;
+    height: 24px;
 }

@@ -8,10 +8,16 @@
     <link rel="icon" type="image/jpg" href="wbms.jpg"/>
 </head>
 <body>
-    <header><button id="listFilesBtn"><img  class="icon" src="home.png"><p>Home</p></button></header>
+    <header>
+        <button id="listFilesBtn"><img class="icon" src="home.png"><p>Home</p></button>
+    </header>
     <div id="filelist">
         <h1 class="original">Files</h1>
-        <button id="delete"><img src="delete.png" class="icon"></button>
+        <div id="fileControls">
+            <button id="folderBackBtn" title="Previous Folder" disabled>←</button>
+            <button id="delete"><img src="delete.png" class="icon"></button>
+            <button id="folderForwardBtn" title="Next Folder" disabled>→</button>
+        </div>
         <ul id="files">
             <!-- Files will be dynamically added here -->
         </ul>
@@ -25,8 +31,6 @@
         <div id="controls">
             <button id="backward"><img src="backward.png" class="icon"></button>
             <button id="forward"><img src="forward.png" class="icon" ></button>
-    
-          
         </div>
        
     </div>
@@ -40,8 +44,6 @@
       
         <a href="index.html"><button id="exit"><img src="logout.png" class="icon"></button></a>
     </div>
-
-
 
     <script src="main.js"></script>
 </body>

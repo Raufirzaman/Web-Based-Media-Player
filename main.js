@@ -4,6 +4,10 @@ let currentDirectoryHandle = null;
 let selectedfile = null;
 let previouslySelected = null;
 
+// Navigation history for folder navigation
+let navigationHistory = [];
+let currentHistoryIndex = -1;
+
 // Open IndexedDB
 function openDatabase() {
     return new Promise((resolve, reject) => {
@@ -61,13 +65,11 @@ async function getStoredDirectoryHandle() {
 
 // Function to retrieve the previously selected directory
 async function getDirectoryHandle() {
-    // First, try to get from IndexedDB
     const storedHandle = await getStoredDirectoryHandle();
     if (storedHandle) {
         return storedHandle;
     }
 
-    // If not found, prompt user to select directory
     try {
         const directoryHandle = await window.showDirectoryPicker();
         const permission = await directoryHandle.requestPermission({ mode: "readwrite" });
@@ -77,7 +79,6 @@ async function getDirectoryHandle() {
             return null;
         }
 
-        // Store for future use
         const db = await openDatabase();
         const transaction = db.transaction(['directories'], 'readwrite');
         const store = transaction.objectStore('directories');
@@ -90,11 +91,32 @@ async function getDirectoryHandle() {
     }
 }
 
+// Update folder navigation buttons state
+function updateFolderNavigationButtons() {
+    const backBtn = document.getElementById("folderBackBtn");
+    const forwardBtn = document.getElementById("folderForwardBtn");
+    
+    backBtn.disabled = currentHistoryIndex <= 0;
+    forwardBtn.disabled = currentHistoryIndex >= navigationHistory.length - 1;
+}
+
+// Add directory to history
+function addToHistory(directoryHandle) {
+    // Remove any forward history if we're navigating to a new folder
+    if (currentHistoryIndex < navigationHistory.length - 1) {
+        navigationHistory = navigationHistory.slice(0, currentHistoryIndex + 1);
+    }
+    
+    navigationHistory.push(directoryHandle);
+    currentHistoryIndex = navigationHistory.length - 1;
+    updateFolderNavigationButtons();
+}
+
 function getfreq(mediaElement) {
     const audioContext = new AudioContext();
     const sourceNode = audioContext.createMediaElementSource(mediaElement);
     const analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 256; // Adjust FFT size for better visualization
+    analyserNode.fftSize = 256;
 
     const bufferLength = analyserNode.frequencyBinCount;
     const amplitudeArray = new Uint8Array(bufferLength);
@@ -112,22 +134,21 @@ function getfreq(mediaElement) {
         canvasContext.clearRect(0, 0, canvasElt.width, canvasElt.height);
         canvasContext.fillStyle = "yellow";
     
-        const barWidth = canvasElt.width / bufferLength; // Dynamic bar width
-        const centerX = canvasElt.width / 2; // Find the center of the canvas
+        const barWidth = canvasElt.width / bufferLength;
+        const centerX = canvasElt.width / 2;
     
         for (let i = 0; i < bufferLength; i++) {
             const barHeight = (amplitudeArray[i] / 256) * canvasElt.height;
-            const x = centerX + (i - bufferLength / 2) * barWidth; // Center the bars
+            const x = centerX + (i - bufferLength / 2) * barWidth;
             canvasContext.fillRect(x, canvasElt.height - barHeight, barWidth - 1, barHeight);
         }
     }
-    
 
     draw();
 }
 
 // Function to list files in the directory
-async function listFiles(directoryHandle = null) {
+async function listFiles(directoryHandle = null, addToNav = true) {
     if (!directoryHandle) {
         directoryHandle = await getDirectoryHandle();
         if (!directoryHandle) {
@@ -136,6 +157,11 @@ async function listFiles(directoryHandle = null) {
             window.location.href = "index.html";
             return;
         }
+    }
+
+    // Add to navigation history
+    if (addToNav) {
+        addToHistory(directoryHandle);
     }
 
     document.getElementById("files").innerHTML = "";
@@ -150,29 +176,23 @@ async function listFiles(directoryHandle = null) {
             if (entry.kind === "directory") {
                 let newFolder = document.createElement("li");
                 newFolder.className = "folder";
-                newFolder.textContent = entry.name;
+                newFolder.textContent = "📁 " + entry.name;
                 newFolder.id = "folder" + folderno;
 
                 newFolder.addEventListener("click", async function () {
                     selectedfile = entry.name;
                     
-                    // Reset background color of previously selected item
                     if (previouslySelected) {
-                        previouslySelected.style.backgroundColor = ""; // Reset previous item's background color
+                        previouslySelected.style.backgroundColor = "";
                     }
                 
-                    // Set the background color for the selected folder
                     newFolder.style.backgroundColor = "#00DFA2"; 
-                
-                    // Store the newly selected folder as the previously selected
                     previouslySelected = newFolder;
                 });
-                
 
                 newFolder.addEventListener("dblclick", async function () {
                     const subDirectoryHandle = await directoryHandle.getDirectoryHandle(entry.name);
-                    currentDirectoryHandle = subDirectoryHandle;
-                    await listFiles(subDirectoryHandle);
+                    await listFiles(subDirectoryHandle, true);
                 });
 
                 document.getElementById("files").appendChild(newFolder);
@@ -182,6 +202,7 @@ async function listFiles(directoryHandle = null) {
                 newItem.textContent = entry.name;
                 newItem.className = "file";
                 newItem.id = "file" + fileno;
+                
                 newItem.addEventListener("dblclick", async function () {
                     const file = await entry.getFile();
                     const fileURL = URL.createObjectURL(file);
@@ -189,7 +210,7 @@ async function listFiles(directoryHandle = null) {
                     let mediaElement;
                     if (file.type.startsWith("video/")) {
                         mediaElement = document.getElementById("video");
-                        document.getElementById("audio").style.display = "none" ;
+                        document.getElementById("audio").style.display = "none";
                         document.getElementById("audio").pause();
                         document.getElementById("video").style.display = "block";
                         document.getElementById("canvas").style.display = "none";
@@ -209,33 +230,26 @@ async function listFiles(directoryHandle = null) {
                     } else {
                         window.open(fileURL);
                     }
-
-                    
                 });
+                
                 newItem.addEventListener("click", async function () {
                     selectedfile = entry.name;
                     const file = await entry.getFile();
                     
-                    // Reset background color of previously selected item
                     if (previouslySelected) {
-                        previouslySelected.style.backgroundColor = ""; // Reset previous item's background color
+                        previouslySelected.style.backgroundColor = "";
                     }
                 
-                    // Set the background color for the selected file
                     newItem.style.backgroundColor = "#00DFA2"; 
-                
-                    // Store the newly selected file as the previously selected
                     previouslySelected = newItem;
                 
-                    // Update file info
                     document.getElementById("filename").innerText = entry.name;
-                    document.getElementById("filesize").innerText = file.size / 1000000 + " MB";
+                    document.getElementById("filesize").innerText = (file.size / 1000000).toFixed(2) + " MB";
                     document.getElementById("filetype").innerText = file.type;
                     document.getElementById("filedate").innerText = new Date(file.lastModified).toLocaleString();
                 });
 
                 document.getElementById("files").appendChild(newItem);
-              
                 fileno++;
             }
         }
@@ -243,18 +257,18 @@ async function listFiles(directoryHandle = null) {
         console.error("Error fetching files:", error);
     }
 }
+
 async function deleteFile(directoryHandle, fileName) {
     try {
         await directoryHandle.removeEntry(fileName);
-         // Correct method
         console.log(`${fileName} deleted successfully`);
-        const fileElements = document.querySelectorAll("li.file"); // Select all file items
+        const fileElements = document.querySelectorAll("li.file, li.folder");
         fileElements.forEach(fileElement => {
             if (fileElement.textContent.includes(fileName)) {
                 fileElement.remove();
             }
-    });
-} catch (error) {
+        });
+    } catch (error) {
         console.error("Error deleting file:", error);
     }
 }
@@ -262,18 +276,45 @@ async function deleteFile(directoryHandle, fileName) {
 document.getElementById("delete").addEventListener("click", async () => {
     if (!selectedfile || !currentDirectoryHandle) {
         console.error("No file selected or directory unavailable.");
+        alert("Please select a file or folder to delete.");
         return;
     }
-    await deleteFile(currentDirectoryHandle, selectedfile);
+    
+    const confirmDelete = confirm(`Are you sure you want to delete "${selectedfile}"?`);
+    if (confirmDelete) {
+        await deleteFile(currentDirectoryHandle, selectedfile);
+    }
 });
 
+// Media seek controls (video/audio forward/backward)
 document.getElementById("forward").addEventListener("click", async () => {
-    const media = document.querySelector("video, audio");
+    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
     if (media) media.currentTime += 10;
-})
+});
+
 document.getElementById("backward").addEventListener("click", () => {
-    const media = document.querySelector("video, audio");
+    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
     if (media) media.currentTime -= 10;
+});
+
+// Folder navigation back button
+document.getElementById("folderBackBtn").addEventListener("click", async () => {
+    if (currentHistoryIndex > 0) {
+        currentHistoryIndex--;
+        const previousDirectory = navigationHistory[currentHistoryIndex];
+        await listFiles(previousDirectory, false);
+        updateFolderNavigationButtons();
+    }
+});
+
+// Folder navigation forward button
+document.getElementById("folderForwardBtn").addEventListener("click", async () => {
+    if (currentHistoryIndex < navigationHistory.length - 1) {
+        currentHistoryIndex++;
+        const nextDirectory = navigationHistory[currentHistoryIndex];
+        await listFiles(nextDirectory, false);
+        updateFolderNavigationButtons();
+    }
 });
 
 // Auto-load files on page load
@@ -281,9 +322,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     await listFiles();
 });
 
-// Home button to refresh file list
+// Home button to go to root directory
 document.getElementById("listFilesBtn").addEventListener("click", async () => {
-    await listFiles();
+    const rootHandle = await getDirectoryHandle();
+    if (rootHandle) {
+        await listFiles(rootHandle, true);
+    }
 });
 
 
