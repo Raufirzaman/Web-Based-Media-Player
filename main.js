@@ -4,28 +4,91 @@ let currentDirectoryHandle = null;
 let selectedfile = null;
 let previouslySelected = null;
 
+// Open IndexedDB
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('MediaPlayerDB', 1);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('directories')) {
+                db.createObjectStore('directories', { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+// Retrieve directory handle from IndexedDB
+async function getStoredDirectoryHandle() {
+    try {
+        const db = await openDatabase();
+        const transaction = db.transaction(['directories'], 'readonly');
+        const store = transaction.objectStore('directories');
+        const request = store.get('main');
+        
+        return new Promise((resolve, reject) => {
+            request.onsuccess = async () => {
+                if (request.result && request.result.handle) {
+                    const handle = request.result.handle;
+                    
+                    // Verify permission
+                    const permission = await handle.queryPermission({ mode: 'readwrite' });
+                    if (permission === 'granted') {
+                        resolve(handle);
+                    } else {
+                        // Request permission again
+                        const newPermission = await handle.requestPermission({ mode: 'readwrite' });
+                        if (newPermission === 'granted') {
+                            resolve(handle);
+                        } else {
+                            resolve(null);
+                        }
+                    }
+                } else {
+                    resolve(null);
+                }
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error("Error retrieving directory handle:", error);
+        return null;
+    }
+}
 
 // Function to retrieve the previously selected directory
 async function getDirectoryHandle() {
-    if (window.directoryHandle) {
-        return window.directoryHandle; // Use stored handle if available
+    // First, try to get from IndexedDB
+    const storedHandle = await getStoredDirectoryHandle();
+    if (storedHandle) {
+        return storedHandle;
     }
 
-    if (localStorage.getItem("directoryAccessGranted") === "true") {
-        try {
-            // Wait for the user to click the button to open the directory picker
-            const directoryHandle = await window.showDirectoryPicker();
-            window.directoryHandle = directoryHandle;
-            return directoryHandle;
-        } catch (error) {
-            console.error("Error retrieving directory handle:", error);
+    // If not found, prompt user to select directory
+    try {
+        const directoryHandle = await window.showDirectoryPicker();
+        const permission = await directoryHandle.requestPermission({ mode: "readwrite" });
+        
+        if (permission !== "granted") {
+            console.error("Permission not granted");
             return null;
         }
+
+        // Store for future use
+        const db = await openDatabase();
+        const transaction = db.transaction(['directories'], 'readwrite');
+        const store = transaction.objectStore('directories');
+        await store.put({ id: 'main', handle: directoryHandle });
+        
+        return directoryHandle;
+    } catch (error) {
+        console.error("Error selecting directory:", error);
+        return null;
     }
-
-    return null;
 }
-
 
 function getfreq(mediaElement) {
     const audioContext = new AudioContext();
@@ -63,13 +126,14 @@ function getfreq(mediaElement) {
     draw();
 }
 
-
 // Function to list files in the directory
 async function listFiles(directoryHandle = null) {
     if (!directoryHandle) {
         directoryHandle = await getDirectoryHandle();
         if (!directoryHandle) {
             console.error("No directory handle available.");
+            alert("Please select a directory first.");
+            window.location.href = "index.html";
             return;
         }
     }
@@ -77,11 +141,9 @@ async function listFiles(directoryHandle = null) {
     document.getElementById("files").innerHTML = "";
     fileno = 0;
     folderno = 0;
-    currentDirectoryHandle=directoryHandle;
+    currentDirectoryHandle = directoryHandle;
     selectedfile = null;
     previouslySelected = null;
- 
-   
 
     try {
         for await (const entry of directoryHandle.values()) {
@@ -213,7 +275,13 @@ document.getElementById("backward").addEventListener("click", () => {
     const media = document.querySelector("video, audio");
     if (media) media.currentTime -= 10;
 });
-// **Button click or gesture** to trigger file listing
+
+// Auto-load files on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    await listFiles();
+});
+
+// Home button to refresh file list
 document.getElementById("listFilesBtn").addEventListener("click", async () => {
     await listFiles();
 });
