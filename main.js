@@ -179,7 +179,7 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 newFolder.textContent = "📁 " + entry.name;
                 newFolder.id = "folder" + folderno;
 
-                newFolder.addEventListener("click", async function () {
+                newFolder.addEventListener("click", function () {
                     selectedfile = entry.name;
                     
                     if (previouslySelected) {
@@ -188,6 +188,12 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 
                     newFolder.style.backgroundColor = "#00DFA2"; 
                     previouslySelected = newFolder;
+
+                    // Show folder info
+                    document.getElementById("filename").innerText = entry.name;
+                    document.getElementById("filesize").innerText = "Folder";
+                    document.getElementById("filetype").innerText = "Directory";
+                    document.getElementById("filedate").innerText = "-";
                 });
 
                 newFolder.addEventListener("dblclick", async function () {
@@ -203,34 +209,8 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 newItem.className = "file";
                 newItem.id = "file" + fileno;
                 
-                newItem.addEventListener("dblclick", async function () {
-                    const file = await entry.getFile();
-                    const fileURL = URL.createObjectURL(file);
-
-                    let mediaElement;
-                    if (file.type.startsWith("video/")) {
-                        mediaElement = document.getElementById("video");
-                        document.getElementById("audio").style.display = "none";
-                        document.getElementById("audio").pause();
-                        document.getElementById("video").style.display = "block";
-                        document.getElementById("canvas").style.display = "none";
-                    } else if (file.type.startsWith("audio/")) {
-                        mediaElement = document.getElementById("audio");
-                        document.getElementById("canvas").style.display = "block";
-                        getfreq(mediaElement);
-                        document.getElementById("video").style.display = "none";
-                        document.getElementById("video").pause();
-                        document.getElementById("audio").style.display = "block";
-                    }
-
-                    if (mediaElement) {
-                        mediaElement.src = fileURL;
-                        mediaElement.style.display = "block";
-                        mediaElement.play();
-                    } else {
-                        window.open(fileURL);
-                    }
-                });
+                // Store the entry reference
+                newItem.entryData = entry;
                 
                 newItem.addEventListener("click", async function () {
                     selectedfile = entry.name;
@@ -243,10 +223,124 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                     newItem.style.backgroundColor = "#00DFA2"; 
                     previouslySelected = newItem;
                 
+                    // Update file info
                     document.getElementById("filename").innerText = entry.name;
-                    document.getElementById("filesize").innerText = (file.size / 1000000).toFixed(2) + " MB";
-                    document.getElementById("filetype").innerText = file.type;
+                    document.getElementById("filesize").innerText = (file.size / 1024 / 1024).toFixed(2) + " MB";
+                    document.getElementById("filetype").innerText = file.type || "Unknown";
                     document.getElementById("filedate").innerText = new Date(file.lastModified).toLocaleString();
+                });
+
+                newItem.addEventListener("dblclick", async function () {
+                    const file = await entry.getFile();
+                    const fileURL = URL.createObjectURL(file);
+
+                    // Hide all viewers first
+                    hideAllViewers();
+
+                    // Show/hide controls based on file type
+                    const isMediaFile = file.type.startsWith("video/") || file.type.startsWith("audio/");
+                    const controlsDiv = document.getElementById("controls");
+                    if (controlsDiv) {
+                        controlsDiv.style.display = isMediaFile ? "flex" : "none";
+                    }
+
+                    let mediaElement;
+                    
+                    // Handle video files
+                    if (file.type.startsWith("video/")) {
+                        mediaElement = document.getElementById("video");
+                        document.getElementById("canvas").style.display = "none";
+                        mediaElement.style.display = "block";
+                        mediaElement.src = fileURL;
+                        mediaElement.play();
+                    } 
+                    // Handle audio files
+                    else if (file.type.startsWith("audio/")) {
+                        mediaElement = document.getElementById("audio");
+                        document.getElementById("canvas").style.display = "block";
+                        getfreq(mediaElement);
+                        mediaElement.style.display = "block";
+                        mediaElement.src = fileURL;
+                        mediaElement.play();
+                    }
+                    // Handle PDF files
+                    else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+                        let pdfViewer = document.getElementById("pdfViewer");
+                        if (!pdfViewer) {
+                            pdfViewer = document.createElement("iframe");
+                            pdfViewer.id = "pdfViewer";
+                            pdfViewer.style.width = "100%";
+                            pdfViewer.style.height = "100%";
+                            pdfViewer.style.border = "none";
+                            pdfViewer.style.borderRadius = "10px";
+                            document.getElementById("player").appendChild(pdfViewer);
+                        }
+                        pdfViewer.src = fileURL;
+                        pdfViewer.style.display = "block";
+                    }
+                    // Handle Office documents (DOCX, XLSX, PPTX)
+                    else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                             file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                             file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+                             file.name.toLowerCase().endsWith('.docx') ||
+                             file.name.toLowerCase().endsWith('.xlsx') ||
+                             file.name.toLowerCase().endsWith('.pptx') ||
+                             file.name.toLowerCase().endsWith('.doc') ||
+                             file.name.toLowerCase().endsWith('.xls') ||
+                             file.name.toLowerCase().endsWith('.ppt')) {
+                        
+                        await renderOfficeDocument(file, fileURL);
+                    }
+                    // Handle text files
+                    else if (file.type.startsWith("text/") || 
+                             file.name.toLowerCase().endsWith('.txt') ||
+                             file.name.toLowerCase().endsWith('.md') ||
+                             file.name.toLowerCase().endsWith('.json') ||
+                             file.name.toLowerCase().endsWith('.xml') ||
+                             file.name.toLowerCase().endsWith('.csv') ||
+                             file.name.toLowerCase().endsWith('.log')) {
+                        
+                        const text = await file.text();
+                        let textViewer = document.getElementById("textViewer");
+                        if (!textViewer) {
+                            textViewer = document.createElement("pre");
+                            textViewer.id = "textViewer";
+                            textViewer.style.width = "100%";
+                            textViewer.style.height = "100%";
+                            textViewer.style.backgroundColor = "white";
+                            textViewer.style.color = "black";
+                            textViewer.style.padding = "20px";
+                            textViewer.style.overflow = "auto";
+                            textViewer.style.textAlign = "left";
+                            textViewer.style.whiteSpace = "pre-wrap";
+                            textViewer.style.wordWrap = "break-word";
+                            textViewer.style.borderRadius = "10px";
+                            textViewer.style.fontFamily = "monospace";
+                            textViewer.style.fontSize = "14px";
+                            document.getElementById("player").appendChild(textViewer);
+                        }
+                        textViewer.textContent = text;
+                        textViewer.style.display = "block";
+                    }
+                    // Handle image files
+                    else if (file.type.startsWith("image/")) {
+                        let imageViewer = document.getElementById("imageViewer");
+                        if (!imageViewer) {
+                            imageViewer = document.createElement("img");
+                            imageViewer.id = "imageViewer";
+                            imageViewer.style.maxWidth = "100%";
+                            imageViewer.style.maxHeight = "100%";
+                            imageViewer.style.objectFit = "contain";
+                            imageViewer.style.borderRadius = "10px";
+                            document.getElementById("player").appendChild(imageViewer);
+                        }
+                        imageViewer.src = fileURL;
+                        imageViewer.style.display = "block";
+                    }
+                    // Handle other file types
+                    else {
+                        window.open(fileURL, '_blank');
+                    }
                 });
 
                 document.getElementById("files").appendChild(newItem);
@@ -329,5 +423,341 @@ document.getElementById("listFilesBtn").addEventListener("click", async () => {
         await listFiles(rootHandle, true);
     }
 });
+
+// Function to render Office documents
+async function renderOfficeDocument(file, fileURL) {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    let officeViewer = document.getElementById("officeViewer");
+    if (!officeViewer) {
+        officeViewer = document.createElement("iframe");
+        officeViewer.id = "officeViewer";
+        officeViewer.style.width = "100%";
+        officeViewer.style.height = "100%";
+        officeViewer.style.border = "none";
+        officeViewer.style.borderRadius = "10px";
+        document.getElementById("player").appendChild(officeViewer);
+    }
+    
+    // Show loading message
+    officeViewer.style.display = "block";
+    officeViewer.srcdoc = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+            <div style="text-align: center;">
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #0079FF; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 20px;">Loading ${fileExtension.toUpperCase()} file...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </div>
+    `;
+    
+    // Method 1: Use Microsoft Office Online Viewer (Most reliable for DOCX, XLSX, PPTX)
+    // This requires the file to be publicly accessible on the internet
+    // For local files, we'll use alternative methods
+    
+    try {
+        // Check if we can use Office Online Viewer (requires public URL)
+        // For local files, we'll use alternative rendering methods
+        
+        if (fileExtension === 'docx' || fileExtension === 'doc') {
+            await renderWordDocument(file, officeViewer);
+        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+            await renderExcelDocument(file, officeViewer);
+        } else if (fileExtension === 'pptx' || fileExtension === 'ppt') {
+            await renderPowerPointDocument(file, officeViewer);
+        }
+    } catch (error) {
+        console.error("Error rendering Office document:", error);
+        officeViewer.srcdoc = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; padding: 20px;">
+                <div style="text-align: center; max-width: 600px;">
+                    <h2 style="color: #FF4444;">Unable to render document</h2>
+                    <p>This ${fileExtension.toUpperCase()} file cannot be displayed in the browser.</p>
+                    <button onclick="parent.postMessage('download', '*')" style="margin-top: 20px; padding: 10px 20px; background: #0079FF; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                        Download File
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Listen for download message
+        window.addEventListener('message', (event) => {
+            if (event.data === 'download') {
+                const a = document.createElement('a');
+                a.href = fileURL;
+                a.download = file.name;
+                a.click();
+            }
+        });
+    }
+}
+
+// Render Word documents using Mammoth.js
+async function renderWordDocument(file, viewer) {
+    // Load Mammoth.js library dynamically
+    if (!window.mammoth) {
+        await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+    }
+    
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+    
+    viewer.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Calibri', 'Arial', sans-serif;
+                    padding: 40px;
+                    background: white;
+                    color: black;
+                    line-height: 1.6;
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                h1, h2, h3, h4, h5, h6 {
+                    color: #333;
+                    margin-top: 1.5em;
+                    margin-bottom: 0.5em;
+                }
+                p {
+                    margin-bottom: 1em;
+                }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 1em 0;
+                }
+                table td, table th {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                }
+                table th {
+                    background-color: #f2f2f2;
+                }
+            </style>
+        </head>
+        <body>
+            ${result.value}
+        </body>
+        </html>
+    `;
+}
+
+// Render Excel documents using SheetJS
+async function renderExcelDocument(file, viewer) {
+    // Load SheetJS library dynamically
+    if (!window.XLSX) {
+        await loadScript('https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js');
+    }
+    
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    
+    let htmlContent = '<div style="padding: 20px; font-family: Arial, sans-serif;">';
+    
+    // Add sheet selector if multiple sheets
+    if (workbook.SheetNames.length > 1) {
+        htmlContent += '<div style="margin-bottom: 20px;"><strong>Sheets:</strong> ';
+        workbook.SheetNames.forEach((sheetName, index) => {
+            htmlContent += `<button onclick="showSheet(${index})" style="margin: 5px; padding: 8px 15px; background: #0079FF; color: white; border: none; border-radius: 5px; cursor: pointer;">${sheetName}</button>`;
+        });
+        htmlContent += '</div>';
+    }
+    
+    // Convert each sheet to HTML
+    workbook.SheetNames.forEach((sheetName, index) => {
+        const worksheet = workbook.Sheets[sheetName];
+        const html = XLSX.utils.sheet_to_html(worksheet);
+        htmlContent += `<div id="sheet-${index}" class="sheet-content" style="${index === 0 ? '' : 'display: none;'}">
+            <h2>${sheetName}</h2>
+            ${html}
+        </div>`;
+    });
+    
+    htmlContent += '</div>';
+    
+    viewer.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                    color: black;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    font-size: 12px;
+                }
+                td, th {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #0079FF;
+                    color: white;
+                    font-weight: bold;
+                }
+                tr:nth-child(even) {
+                    background-color: #f2f2f2;
+                }
+                tr:hover {
+                    background-color: #e8f4f8;
+                }
+            </style>
+            <script>
+                function showSheet(index) {
+                    const sheets = document.querySelectorAll('.sheet-content');
+                    sheets.forEach((sheet, i) => {
+                        sheet.style.display = i === index ? 'block' : 'none';
+                    });
+                }
+            </script>
+        </head>
+        <body>
+            ${htmlContent}
+        </body>
+        </html>
+    `;
+}
+
+// Render PowerPoint documents
+async function renderPowerPointDocument(file, viewer) {
+    // For PowerPoint, we'll use a combination of approaches
+    // Since there's no good free library for full PPTX rendering, we'll show a message
+    
+    viewer.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                .container {
+                    text-align: center;
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 40px;
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    max-width: 600px;
+                }
+                h2 {
+                    margin-bottom: 20px;
+                }
+                .info {
+                    margin: 20px 0;
+                    font-size: 16px;
+                }
+                .buttons {
+                    margin-top: 30px;
+                }
+                button {
+                    margin: 10px;
+                    padding: 12px 30px;
+                    background: white;
+                    color: #667eea;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.3s;
+                }
+                button:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>📊 PowerPoint Presentation</h2>
+                <div class="info">
+                    <p><strong>File:</strong> ${file.name}</p>
+                    <p><strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+                <p>PowerPoint files require external viewer for full rendering.</p>
+                <div class="buttons">
+                    <button onclick="parent.postMessage('download', '*')">💾 Download File</button>
+                    <button onclick="openWithOfficeOnline()">🌐 Open with Office Online</button>
+                </div>
+            </div>
+            <script>
+                function openWithOfficeOnline() {
+                    alert('To view with Office Online, upload the file to OneDrive, Google Drive, or Dropbox and use their built-in viewers.');
+                }
+            </script>
+        </body>
+        </html>
+    `;
+    
+    // Listen for download message
+    window.addEventListener('message', (event) => {
+        if (event.data === 'download') {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(file);
+            a.download = file.name;
+            a.click();
+        }
+    });
+}
+
+// Helper function to load external scripts dynamically
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// Function to hide all viewers
+function hideAllViewers() {
+    document.getElementById("video").style.display = "none";
+    document.getElementById("audio").style.display = "none";
+    document.getElementById("canvas").style.display = "none";
+    
+    const pdfViewer = document.getElementById("pdfViewer");
+    if (pdfViewer) pdfViewer.style.display = "none";
+    
+    const textViewer = document.getElementById("textViewer");
+    if (textViewer) textViewer.style.display = "none";
+    
+    const imageViewer = document.getElementById("imageViewer");
+    if (imageViewer) imageViewer.style.display = "none";
+    
+    const officeViewer = document.getElementById("officeViewer");
+    if (officeViewer) officeViewer.style.display = "none";
+    
+    // Pause any playing media
+    document.getElementById("video").pause();
+    document.getElementById("audio").pause();
+}
 
 

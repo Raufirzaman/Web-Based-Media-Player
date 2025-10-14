@@ -1,144 +1,99 @@
 /* Resetting default styling for all elements */
 * {
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-.icon {
-    width: 20px;
-    height: 20px;
-    margin: 10px;
-    cursor: pointer;
-}
-
-
-/* Style buttons */
-button {
-    background-color: #F6FA70;
-    border: none;
-    border-radius: 20%;
-    cursor: pointer;
-    transition: 0.5s;
-}
-
-button:hover {
-    background-color: #019870;
-    transition: 0.9s;
-}
-
 body {
-    background-color: #00DFA2 ;
-
-    display: flex;
-    flex-direction: column;  
-    height: 100vh;           
-    overflow: hidden;       
-    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #0a0a0a;
+    color: white;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    grid-template-rows: auto 1fr;
+    gap: 15px;
+    padding: 15px;
+    overflow: hidden;
+    transition: grid-template-columns 0.3s ease;
 }
 
-/* Home button styling */
+body.fileinfo-collapsed {
+    grid-template-columns: 1fr 2fr 60px;
+}
+
+/* Header */
+header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+}
+
 #listFilesBtn {
-    width: 95%;
+    padding: 10px 20px;
     border-radius: 10px;
     font-weight: bolder;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    text-align: center;
     border: none;
-    margin: 0 auto;
     background-color: #0079FF;
-    color: black;
+    color: white;
     font-size: 16px;
     cursor: pointer;
-    transition: 0.5s;
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
+    transition: 0.3s;
 }
 
 #listFilesBtn:hover {
     background-color: #02a177;
-    transition: 0.9s;
 }
 
-button p {
+#listFilesBtn .icon {
+    width: 24px;
+    height: 24px;
+}
+
+#listFilesBtn p {
     margin: 0;
 }
 
-header {
-    margin: 0 auto;
-}
-
-/* Exit button styling */
-#exit {
-    width: 95%;
-    border-radius: 10px;
-    font-weight: bolder;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-align: center;
-    border: none;
-    margin: 0 auto;
-    background-color: #0079FF;
-    color: black;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.5s;
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-}
-
-#exit:hover {
-    background-color: #FF0060;
-    transition: 0.9s;
-}
-
-/* File List Section */
+/* File list section */
 #filelist {
-    position: fixed;
-    top: 60px; 
-    left: 0;
-    width: 30%;
-    height: calc(100vh - 120px); 
-    padding: 10px;
-    background-color: #F6FA70;
-    border-right: 2px solid #ccc;
-    overflow: hidden;
+    grid-column: 1;
+    grid-row: 2;
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-#files {
-    max-height: 100%;  
-    overflow-y: auto;  
-    padding: 0;        
-    margin: 0;        
-}
-
-#filelist h1 {
+#filelist h1.original {
+    margin-bottom: 15px;
+    color: #0079FF;
     font-size: 24px;
-    margin-bottom: 10px;
 }
 
 #filelist ul {
     list-style-type: none;
 }
+
 #filelist ul li {
     padding: 10px;
     border-bottom: 1px solid #ccc;
     text-align: left;
     cursor: pointer;
 }
-#filelist ul li:hover{
+
+#filelist ul li:hover {
     background-color: azure;
 }
 
@@ -147,82 +102,13 @@ header {
     margin-top: 20px;
 }
 
-/* Player Section */
-#player {
-    position: absolute;
-    top: 10%;
-    left: 35%;
-    width: 60%;
-    height: calc(90vh - 50px);
-border-radius: 20px;
-align-items: center;
-justify-items: center;
-    text-align: center;
-    overflow: hidden; 
-}
-
-#player #canvas {
- 
-    width: 100%;
-    height: 70%;
-    align-items: center;
-    justify-items: center;
-    object-fit: contain;
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 20px;
-    position:absolute;
-    top:-7%;
-    left: 10%;
-
- 
-}
-
-#controls {
-    position: absolute;
-    top: 2px;  
-    width: 100%;
-    display: flex;
-    justify-content: space-between; 
-    gap: 10px;
-    padding: 0 10px;
-}
-
-
-#fileinfo {
-    position: absolute;
-    bottom: 10%;
-    left: 35%;
-    width: 60%;
-    background-color: #F6FA70;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    overflow: hidden;
-    text-align: left;
-}
-
-video {
-    width: 100%;
-    height: 70%;   
-    object-fit: contain; 
-    max-width: 100%;     
-    max-height: 100%; 
-    border-radius: 20px; 
-}
-audio{
-    position: absolute;
-    top:60%;
-    left: 30%;
-    
-}
-
 /* File controls container */
 #fileControls {
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 /* Folder navigation buttons with arrow symbols */
@@ -251,9 +137,9 @@ audio{
 
 #folderBackBtn:disabled, 
 #folderForwardBtn:disabled {
-    background-color: #cccccc;
-    border-color: #999999;
-    color: #666666;
+    background-color: #555555;
+    border-color: #444444;
+    color: #888888;
     cursor: not-allowed;
     opacity: 0.5;
 }
@@ -263,7 +149,7 @@ audio{
     transform: scale(0.95);
 }
 
-/* Delete button styling to match navigation buttons */
+/* Delete button styling */
 #delete {
     width: 45px;
     height: 45px;
@@ -275,6 +161,7 @@ audio{
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
 }
 
 #delete:hover {
@@ -290,4 +177,308 @@ audio{
 #delete .icon {
     width: 24px;
     height: 24px;
+}
+
+/* Files list */
+#files {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+#files li {
+    padding: 12px 15px;
+    margin: 8px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s;
+    background-color: #2a2a2a;
+    word-wrap: break-word;
+    border: 2px solid transparent;
+}
+
+#files li:hover {
+    background-color: #3a3a3a;
+    border-color: #0079FF;
+}
+
+#files li.file {
+    color: #ffffff;
+}
+
+#files li.folder {
+    color: #FFD700;
+    font-weight: bold;
+}
+
+/* Player section */
+#player {
+    grid-column: 2;
+    grid-row: 2;
+    position: relative;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Media controls */
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 15px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px 25px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+}
+
+#controls button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background-color: #0079FF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+#controls button:hover {
+    background-color: #02a177;
+    transform: scale(1.1);
+}
+
+#controls button .icon {
+    width: 28px;
+    height: 28px;
+}
+
+/* Video element */
+#video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+/* Audio element */
+#audio {
+    width: 80%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+/* Canvas for audio visualization */
+#canvas {
+    width: 80%;
+    max-width: 600px;
+    height: 200px;
+    margin-top: 20px;
+    border-radius: 10px;
+    background-color: #000;
+}
+
+/* Viewers styling */
+#pdfViewer, #officeViewer, #textViewer, #imageViewer {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    display: none;
+}
+
+#textViewer {
+    box-sizing: border-box;
+}
+
+#imageViewer {
+    object-fit: contain;
+}
+
+/* File info section */
+#fileinfo {
+    grid-column: 3;
+    grid-row: 2;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    transition: width 0.3s ease;
+}
+
+#fileinfo.collapsed {
+    width: 60px;
+}
+
+/* File info header */
+#fileinfoHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #252525;
+    border-bottom: 2px solid #0079FF;
+}
+
+#fileinfoHeader h1.original {
+    margin: 0;
+    color: #0079FF;
+    font-size: 24px;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+}
+
+#fileinfo.collapsed #fileinfoHeader h1.original {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Toggle button */
+#toggleFileInfo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #0079FF;
+    background-color: #0079FF;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#toggleFileInfo:hover {
+    background-color: #02a177;
+    border-color: #02a177;
+    transform: scale(1.1);
+}
+
+#fileinfo.collapsed #toggleFileInfo {
+    transform: rotate(180deg);
+}
+
+#fileinfo.collapsed #toggleFileInfo:hover {
+    transform: rotate(180deg) scale(1.1);
+}
+
+/* File info content */
+#fileinfoContent {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
+}
+
+#fileinfo.collapsed #fileinfoContent {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#fileinfoContent p {
+    margin: 12px 0;
+    word-wrap: break-word;
+    font-size: 14px;
+    color: #cccccc;
+}
+
+#fileinfoContent span {
+    color: #00DFA2;
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+/* Exit button */
+#exit {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 2px solid #FF4444;
+    background-color: #FF4444;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    padding: 0;
+}
+
+#exit:hover {
+    background-color: #CC0000;
+    border-color: #CC0000;
+    transform: scale(1.1);
+}
+
+#exit .icon {
+    width: 28px;
+    height: 28px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0079FF;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #02a177;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr auto;
+    }
+    
+    #filelist {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    
+    #player {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: 400px;
+    }
+    
+    #fileinfo {
+        grid-column: 1;
+        grid-row: 4;
+        width: 100%;
+    }
+    
+    #fileinfo.collapsed {
+        width: 100%;
+    }
 }

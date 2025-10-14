@@ -9,40 +9,46 @@
 </head>
 <body>
     <header>
-        <button id="listFilesBtn"><img class="icon" src="home.png"><p>Home</p></button>
+        <button id="listFilesBtn"><img class="icon" src="home.png" alt="Home Icon"><p>Home</p></button>
     </header>
+    
     <div id="filelist">
         <h1 class="original">Files</h1>
         <div id="fileControls">
             <button id="folderBackBtn" title="Previous Folder" disabled>←</button>
-            <button id="delete"><img src="delete.png" class="icon"></button>
             <button id="folderForwardBtn" title="Next Folder" disabled>→</button>
+            <button id="delete" title="Delete"><img src="delete.png" class="icon" alt="Delete Icon"></button>
         </div>
         <ul id="files">
             <!-- Files will be dynamically added here -->
         </ul>
-        
     </div>
 
     <div id="player">
         <video id="video" controls style="display: none;"></video>
         <audio id="audio" controls style="display: none;"></audio>
         <canvas id="canvas" width="512" height="200" style="display: none;"></canvas>
-        <div id="controls">
-            <button id="backward"><img src="backward.png" class="icon"></button>
-            <button id="forward"><img src="forward.png" class="icon" ></button>
+        
+        <!-- Media controls - only visible for video/audio -->
+        <div id="controls" style="display: none;">
+            <button id="backward" title="Rewind 10s"><img src="backward.png" class="icon"></button>
+            <button id="forward" title="Forward 10s"><img src="forward.png" class="icon"></button>
         </div>
-       
     </div>
 
     <div id="fileinfo">
-        <h1 class="original">File Info:</h1>
-        <p>File Name: <span id="filename"></span></p>
-        <p>File Size: <span id="filesize"></span></p>
-        <p>File Type: <span id="filetype"></span></p>
-        <p>File Date: <span id="filedate"></span></p>
-      
-        <a href="index.html"><button id="exit"><img src="logout.png" class="icon"></button></a>
+        <div id="fileinfoHeader">
+            <h1 class="original">File Info</h1>
+            <button id="toggleFileInfo" title="Toggle File Info">◀</button>
+        </div>
+        <div id="fileinfoContent">
+            <p>File Name: <span id="filename">-</span></p>
+            <p>File Size: <span id="filesize">-</span></p>
+            <p>File Type: <span id="filetype">-</span></p>
+            <p>File Date: <span id="filedate">-</span></p>
+          
+            <a href="index.html"><button id="exit" title="Exit"><img src="logout.png" class="icon" alt="Logout Icon" title="Logout"></button></a>
+        </div>
     </div>
 
     <script src="main.js"></script>
