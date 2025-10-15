@@ -11,7 +11,7 @@ body {
     color: white;
     height: 100vh;
     display: grid;
-    grid-template-columns: 1fr 2fr auto;
+    grid-template-columns: 1fr 2fr 300px;
     grid-template-rows: auto 1fr;
     gap: 15px;
     padding: 15px;
@@ -62,6 +62,32 @@ header {
 
 #listFilesBtn p {
     margin: 0;
+}
+
+/* Exit button in header */
+#exit {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #FF4444;
+    background-color: #FF4444;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+#exit:hover {
+    background-color: #CC0000;
+    border-color: #CC0000;
+    transform: scale(1.1);
+}
+
+#exit .icon {
+    width: 24px;
+    height: 24px;
 }
 
 /* Search Container */
@@ -259,7 +285,7 @@ header {
 }
 
 #files li:hover {
-    background-color: #3a3a3a;
+    background-color: #00DFA2;
     border-color: #0079FF;
     color: black !important;
 }
@@ -300,17 +326,17 @@ header {
     left: 50%;
     transform: translateX(-50%);
     display: none;
-    gap: 15px;
+    gap: 10px;
     z-index: 100;
     background: rgba(0, 0, 0, 0.8);
-    padding: 15px 25px;
-    border-radius: 30px;
+    padding: 10px 15px;
+    border-radius: 25px;
     backdrop-filter: blur(10px);
 }
 
 #controls button {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: none;
     background-color: #0079FF;
@@ -327,9 +353,13 @@ header {
     transform: scale(1.1);
 }
 
+#controls button:active {
+    transform: scale(0.95);
+}
+
 #controls button .icon {
-    width: 28px;
-    height: 28px;
+    width: 20px;
+    height: 20px;
 }
 
 /* Video element */
@@ -382,11 +412,10 @@ header {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    width: 300px;
-    transition: width 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-#fileinfo.collapsed {
+body.fileinfo-collapsed #fileinfo {
     width: 60px;
 }
 
@@ -398,6 +427,7 @@ header {
     padding: 20px;
     background-color: #252525;
     border-bottom: 2px solid #0079FF;
+    flex-shrink: 0;
 }
 
 #fileinfoHeader h1.original {
@@ -408,7 +438,7 @@ header {
     transition: opacity 0.3s ease;
 }
 
-#fileinfo.collapsed #fileinfoHeader h1.original {
+body.fileinfo-collapsed #fileinfoHeader h1.original {
     opacity: 0;
     width: 0;
     overflow: hidden;
@@ -437,11 +467,11 @@ header {
     transform: scale(1.1);
 }
 
-#fileinfo.collapsed #toggleFileInfo {
+body.fileinfo-collapsed #toggleFileInfo {
     transform: rotate(180deg);
 }
 
-#fileinfo.collapsed #toggleFileInfo:hover {
+body.fileinfo-collapsed #toggleFileInfo:hover {
     transform: rotate(180deg) scale(1.1);
 }
 
@@ -455,9 +485,13 @@ header {
     transition: opacity 0.3s ease;
 }
 
-#fileinfo.collapsed #fileinfoContent {
+body.fileinfo-collapsed #fileinfoContent {
     opacity: 0;
     pointer-events: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 #fileinfoContent p {
@@ -472,33 +506,6 @@ header {
     font-weight: bold;
     display: block;
     margin-top: 5px;
-}
-
-/* Exit button */
-#exit {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    border: 2px solid #FF4444;
-    background-color: #FF4444;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: auto;
-    padding: 0;
-}
-
-#exit:hover {
-    background-color: #CC0000;
-    border-color: #CC0000;
-    transform: scale(1.1);
-}
-
-#exit .icon {
-    width: 28px;
-    height: 28px;
 }
 
 /* Scrollbar styling */
@@ -527,6 +534,10 @@ header {
         grid-template-rows: auto auto 1fr auto;
     }
     
+    body.fileinfo-collapsed {
+        grid-template-columns: 1fr;
+    }
+    
     #filelist {
         grid-column: 1;
         grid-row: 2;
@@ -541,10 +552,10 @@ header {
     #fileinfo {
         grid-column: 1;
         grid-row: 4;
-        width: 100%;
+        width: 100% !important;
     }
     
-    #fileinfo.collapsed {
-        width: 100%;
+    body.fileinfo-collapsed #fileinfo {
+        height: 60px;
     }
 }

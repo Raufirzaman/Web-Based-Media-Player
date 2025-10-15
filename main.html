@@ -9,7 +9,10 @@
 </head>
 <body>
     <header>
-        <button id="listFilesBtn"><img class="icon" src="home.png" alt="Home Icon"><p>Home</p></button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="listFilesBtn"><img class="icon" src="home.png" alt="Home Icon"><p>Home</p></button>
+            <a href="index.html"><button id="exit" title="Exit"><img src="logout.png" class="icon" alt="Logout Icon"></button></a>
+        </div>
         
         <div id="searchContainer">
             <input type="text" id="searchInput" placeholder="Search files and folders..." />
@@ -51,8 +54,6 @@
             <p>File Size: <span id="filesize">-</span></p>
             <p>File Type: <span id="filetype">-</span></p>
             <p>File Date: <span id="filedate">-</span></p>
-          
-            <a href="index.html"><button id="exit" title="Exit"><img src="logout.png" class="icon" alt="Logout Icon" title="Logout"></button></a>
         </div>
     </div>
 

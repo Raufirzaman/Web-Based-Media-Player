@@ -147,6 +147,29 @@ function getfreq(mediaElement) {
     draw();
 }
 
+// Helper function to hide all viewers
+function hideAllViewers() {
+    document.getElementById("video").style.display = "none";
+    document.getElementById("audio").style.display = "none";
+    document.getElementById("canvas").style.display = "none";
+    
+    const pdfViewer = document.getElementById("pdfViewer");
+    if (pdfViewer) pdfViewer.style.display = "none";
+    
+    const textViewer = document.getElementById("textViewer");
+    if (textViewer) textViewer.style.display = "none";
+    
+    const imageViewer = document.getElementById("imageViewer");
+    if (imageViewer) imageViewer.style.display = "none";
+    
+    const officeViewer = document.getElementById("officeViewer");
+    if (officeViewer) officeViewer.style.display = "none";
+    
+    // Pause any playing media
+    document.getElementById("video").pause();
+    document.getElementById("audio").pause();
+}
+
 // Function to list files in the directory
 async function listFiles(directoryHandle = null, addToNav = true) {
     if (!directoryHandle) {
@@ -367,63 +390,6 @@ async function deleteFile(directoryHandle, fileName) {
     }
 }
 
-document.getElementById("delete").addEventListener("click", async () => {
-    if (!selectedfile || !currentDirectoryHandle) {
-        console.error("No file selected or directory unavailable.");
-        alert("Please select a file or folder to delete.");
-        return;
-    }
-    
-    const confirmDelete = confirm(`Are you sure you want to delete "${selectedfile}"?`);
-    if (confirmDelete) {
-        await deleteFile(currentDirectoryHandle, selectedfile);
-    }
-});
-
-// Media seek controls (video/audio forward/backward)
-document.getElementById("forward").addEventListener("click", async () => {
-    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
-    if (media) media.currentTime += 10;
-});
-
-document.getElementById("backward").addEventListener("click", () => {
-    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
-    if (media) media.currentTime -= 10;
-});
-
-// Folder navigation back button
-document.getElementById("folderBackBtn").addEventListener("click", async () => {
-    if (currentHistoryIndex > 0) {
-        currentHistoryIndex--;
-        const previousDirectory = navigationHistory[currentHistoryIndex];
-        await listFiles(previousDirectory, false);
-        updateFolderNavigationButtons();
-    }
-});
-
-// Folder navigation forward button
-document.getElementById("folderForwardBtn").addEventListener("click", async () => {
-    if (currentHistoryIndex < navigationHistory.length - 1) {
-        currentHistoryIndex++;
-        const nextDirectory = navigationHistory[currentHistoryIndex];
-        await listFiles(nextDirectory, false);
-        updateFolderNavigationButtons();
-    }
-});
-
-// Auto-load files on page load
-window.addEventListener('DOMContentLoaded', async () => {
-    await listFiles();
-});
-
-// Home button to go to root directory
-document.getElementById("listFilesBtn").addEventListener("click", async () => {
-    const rootHandle = await getDirectoryHandle();
-    if (rootHandle) {
-        await listFiles(rootHandle, true);
-    }
-});
-
 // Function to render Office documents
 async function renderOfficeDocument(file, fileURL) {
     const fileExtension = file.name.split('.').pop().toLowerCase();
@@ -456,14 +422,7 @@ async function renderOfficeDocument(file, fileURL) {
         </div>
     `;
     
-    // Method 1: Use Microsoft Office Online Viewer (Most reliable for DOCX, XLSX, PPTX)
-    // This requires the file to be publicly accessible on the internet
-    // For local files, we'll use alternative methods
-    
     try {
-        // Check if we can use Office Online Viewer (requires public URL)
-        // For local files, we'll use alternative rendering methods
-        
         if (fileExtension === 'docx' || fileExtension === 'doc') {
             await renderWordDocument(file, officeViewer);
         } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
@@ -485,7 +444,6 @@ async function renderOfficeDocument(file, fileURL) {
             </div>
         `;
         
-        // Listen for download message
         window.addEventListener('message', (event) => {
             if (event.data === 'download') {
                 const a = document.createElement('a');
@@ -499,7 +457,6 @@ async function renderOfficeDocument(file, fileURL) {
 
 // Render Word documents using Mammoth.js
 async function renderWordDocument(file, viewer) {
-    // Load Mammoth.js library dynamically
     if (!window.mammoth) {
         await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
     }
@@ -556,7 +513,6 @@ async function renderWordDocument(file, viewer) {
 
 // Render Excel documents using SheetJS
 async function renderExcelDocument(file, viewer) {
-    // Load SheetJS library dynamically
     if (!window.XLSX) {
         await loadScript('https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js');
     }
@@ -566,7 +522,6 @@ async function renderExcelDocument(file, viewer) {
     
     let htmlContent = '<div style="padding: 20px; font-family: Arial, sans-serif;">';
     
-    // Add sheet selector if multiple sheets
     if (workbook.SheetNames.length > 1) {
         htmlContent += '<div style="margin-bottom: 20px;"><strong>Sheets:</strong> ';
         workbook.SheetNames.forEach((sheetName, index) => {
@@ -575,7 +530,6 @@ async function renderExcelDocument(file, viewer) {
         htmlContent += '</div>';
     }
     
-    // Convert each sheet to HTML
     workbook.SheetNames.forEach((sheetName, index) => {
         const worksheet = workbook.Sheets[sheetName];
         const html = XLSX.utils.sheet_to_html(worksheet);
@@ -638,9 +592,6 @@ async function renderExcelDocument(file, viewer) {
 
 // Render PowerPoint documents
 async function renderPowerPointDocument(file, viewer) {
-    // For PowerPoint, we'll use a combination of approaches
-    // Since there's no good free library for full PPTX rendering, we'll show a message
-    
     viewer.srcdoc = `
         <!DOCTYPE html>
         <html>
@@ -715,7 +666,6 @@ async function renderPowerPointDocument(file, viewer) {
         </html>
     `;
     
-    // Listen for download message
     window.addEventListener('message', (event) => {
         if (event.data === 'download') {
             const a = document.createElement('a');
@@ -737,35 +687,69 @@ function loadScript(src) {
     });
 }
 
-// Function to hide all viewers
-function hideAllViewers() {
-    document.getElementById("video").style.display = "none";
-    document.getElementById("audio").style.display = "none";
-    document.getElementById("canvas").style.display = "none";
+// EVENT LISTENERS
+
+// Delete button
+document.getElementById("delete").addEventListener("click", async () => {
+    if (!selectedfile || !currentDirectoryHandle) {
+        console.error("No file selected or directory unavailable.");
+        alert("Please select a file or folder to delete.");
+        return;
+    }
     
-    const pdfViewer = document.getElementById("pdfViewer");
-    if (pdfViewer) pdfViewer.style.display = "none";
-    
-    const textViewer = document.getElementById("textViewer");
-    if (textViewer) textViewer.style.display = "none";
-    
-    const imageViewer = document.getElementById("imageViewer");
-    if (imageViewer) imageViewer.style.display = "none";
-    
-    const officeViewer = document.getElementById("officeViewer");
-    if (officeViewer) officeViewer.style.display = "none";
-    
-    // Pause any playing media
-    document.getElementById("video").pause();
-    document.getElementById("audio").pause();
-}
+    const confirmDelete = confirm(`Are you sure you want to delete "${selectedfile}"?`);
+    if (confirmDelete) {
+        await deleteFile(currentDirectoryHandle, selectedfile);
+    }
+});
+
+// Media seek controls (video/audio forward/backward)
+document.getElementById("forward").addEventListener("click", async () => {
+    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
+    if (media) media.currentTime += 10;
+});
+
+document.getElementById("backward").addEventListener("click", () => {
+    const media = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
+    if (media) media.currentTime -= 10;
+});
+
+// Folder navigation back button
+document.getElementById("folderBackBtn").addEventListener("click", async () => {
+    if (currentHistoryIndex > 0) {
+        currentHistoryIndex--;
+        const previousDirectory = navigationHistory[currentHistoryIndex];
+        await listFiles(previousDirectory, false);
+        updateFolderNavigationButtons();
+    }
+});
+
+// Folder navigation forward button
+document.getElementById("folderForwardBtn").addEventListener("click", async () => {
+    if (currentHistoryIndex < navigationHistory.length - 1) {
+        currentHistoryIndex++;
+        const nextDirectory = navigationHistory[currentHistoryIndex];
+        await listFiles(nextDirectory, false);
+        updateFolderNavigationButtons();
+    }
+});
+
+// Auto-load files on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    await listFiles();
+});
+
+// Home button to go to root directory
+document.getElementById("listFilesBtn").addEventListener("click", async () => {
+    const rootHandle = await getDirectoryHandle();
+    if (rootHandle) {
+        await listFiles(rootHandle, true);
+    }
+});
 
 // Toggle file info panel
 document.getElementById("toggleFileInfo").addEventListener("click", function() {
-    const fileinfo = document.getElementById("fileinfo");
     const body = document.body;
-    
-    fileinfo.classList.toggle("collapsed");
     body.classList.toggle("fileinfo-collapsed");
 });
 
@@ -844,8 +828,9 @@ clearSearchBtn.addEventListener("click", function() {
     searchInput.focus();
 });
 
-// Keyboard shortcut: Ctrl+F or Cmd+F to focus search
+// Keyboard shortcuts
 document.addEventListener("keydown", function(e) {
+    // Ctrl+F or Cmd+F to focus search
     if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
         searchInput.focus();
@@ -854,6 +839,71 @@ document.addEventListener("keydown", function(e) {
     // Escape to clear search
     if (e.key === "Escape" && document.activeElement === searchInput) {
         clearSearchBtn.click();
+    }
+    
+    // Media control shortcuts (only when media is playing)
+    const activeMedia = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
+    
+    if (activeMedia && document.activeElement.tagName !== "INPUT") {
+        // Arrow Right: Forward 10 seconds
+        if (e.key === "ArrowRight") {
+            e.preventDefault();
+            activeMedia.currentTime += 10;
+        }
+        
+        // Arrow Left: Backward 10 seconds
+        if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            activeMedia.currentTime -= 10;
+        }
+        
+        // Spacebar: Play/Pause
+        if (e.key === " " || e.code === "Space") {
+            e.preventDefault();
+            if (activeMedia.paused) {
+                activeMedia.play();
+            } else {
+                activeMedia.pause();
+            }
+        }
+        
+        // Arrow Up: Volume up
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (activeMedia.volume < 1) {
+                activeMedia.volume = Math.min(1, activeMedia.volume + 0.1);
+            }
+        }
+        
+        // Arrow Down: Volume down
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (activeMedia.volume > 0) {
+                activeMedia.volume = Math.max(0, activeMedia.volume - 0.1);
+            }
+        }
+        
+        // M: Mute/Unmute
+        if (e.key === "m" || e.key === "M") {
+            e.preventDefault();
+            activeMedia.muted = !activeMedia.muted;
+        }
+        
+        // F: Fullscreen (for video only)
+        if ((e.key === "f" || e.key === "F") && activeMedia.tagName === "VIDEO") {
+            e.preventDefault();
+            if (!document.fullscreenElement) {
+                activeMedia.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    }
+    
+    // I: Toggle file info panel
+    if ((e.key === "i" || e.key === "I") && document.activeElement.tagName !== "INPUT") {
+        e.preventDefault();
+        document.getElementById("toggleFileInfo").click();
     }
 });
 
