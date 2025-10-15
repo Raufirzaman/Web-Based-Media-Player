@@ -27,10 +27,10 @@ body.fileinfo-collapsed {
 header {
     grid-column: 1 / -1;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: 10px;
-    padding: 10px;
+    padding: 10px 20px;
     background-color: #1a1a1a;
     border-radius: 10px;
 }
@@ -62,6 +62,65 @@ header {
 
 #listFilesBtn p {
     margin: 0;
+}
+
+/* Search Container */
+#searchContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #2a2a2a;
+    padding: 8px 15px;
+    border-radius: 25px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    flex: 0 1 400px;
+    max-width: 400px;
+}
+
+#searchContainer:focus-within {
+    border-color: #0079FF;
+    background-color: #333333;
+}
+
+#searchInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 15px;
+    padding: 5px;
+    min-width: 0;
+}
+
+#searchInput::placeholder {
+    color: #888888;
+}
+
+#clearSearch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #FF4444;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+#clearSearch.visible {
+    display: flex;
+}
+
+#clearSearch:hover {
+    background-color: #CC0000;
+    transform: scale(1.1);
 }
 
 /* File list section */
@@ -202,6 +261,7 @@ header {
 #files li:hover {
     background-color: #3a3a3a;
     border-color: #0079FF;
+    color: black !important;
 }
 
 #files li.file {
@@ -211,6 +271,12 @@ header {
 #files li.folder {
     color: #FFD700;
     font-weight: bold;
+}
+
+/* Ensure hover text color applies to both files and folders */
+#files li.file:hover,
+#files li.folder:hover {
+    color: black !important;
 }
 
 /* Player section */

@@ -760,4 +760,101 @@ function hideAllViewers() {
     document.getElementById("audio").pause();
 }
 
+// Toggle file info panel
+document.getElementById("toggleFileInfo").addEventListener("click", function() {
+    const fileinfo = document.getElementById("fileinfo");
+    const body = document.body;
+    
+    fileinfo.classList.toggle("collapsed");
+    body.classList.toggle("fileinfo-collapsed");
+});
+
+// Search functionality
+const searchInput = document.getElementById("searchInput");
+const clearSearchBtn = document.getElementById("clearSearch");
+
+searchInput.addEventListener("input", function() {
+    const searchTerm = this.value.toLowerCase().trim();
+    
+    // Show/hide clear button
+    if (searchTerm) {
+        clearSearchBtn.classList.add("visible");
+    } else {
+        clearSearchBtn.classList.remove("visible");
+    }
+    
+    // Filter files and folders
+    const filesList = document.getElementById("files");
+    const allItems = filesList.querySelectorAll("li");
+    
+    let visibleCount = 0;
+    
+    allItems.forEach(item => {
+        const itemName = item.textContent.toLowerCase();
+        
+        if (itemName.includes(searchTerm)) {
+            item.style.display = "";
+            visibleCount++;
+        } else {
+            item.style.display = "none";
+        }
+    });
+    
+    // Show message if no results found
+    let noResultsMsg = document.getElementById("noResults");
+    
+    if (visibleCount === 0 && searchTerm) {
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement("li");
+            noResultsMsg.id = "noResults";
+            noResultsMsg.style.textAlign = "center";
+            noResultsMsg.style.color = "#FF4444";
+            noResultsMsg.style.padding = "20px";
+            noResultsMsg.style.fontStyle = "italic";
+            noResultsMsg.textContent = `No files or folders found matching "${searchTerm}"`;
+            filesList.appendChild(noResultsMsg);
+        } else {
+            noResultsMsg.textContent = `No files or folders found matching "${searchTerm}"`;
+            noResultsMsg.style.display = "";
+        }
+    } else {
+        if (noResultsMsg) {
+            noResultsMsg.style.display = "none";
+        }
+    }
+});
+
+// Clear search button
+clearSearchBtn.addEventListener("click", function() {
+    searchInput.value = "";
+    clearSearchBtn.classList.remove("visible");
+    
+    // Show all files
+    const allItems = document.querySelectorAll("#files li");
+    allItems.forEach(item => {
+        item.style.display = "";
+    });
+    
+    // Hide no results message
+    const noResultsMsg = document.getElementById("noResults");
+    if (noResultsMsg) {
+        noResultsMsg.style.display = "none";
+    }
+    
+    searchInput.focus();
+});
+
+// Keyboard shortcut: Ctrl+F or Cmd+F to focus search
+document.addEventListener("keydown", function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        searchInput.focus();
+    }
+    
+    // Escape to clear search
+    if (e.key === "Escape" && document.activeElement === searchInput) {
+        clearSearchBtn.click();
+    }
+});
+
 
