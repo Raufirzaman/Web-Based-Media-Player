@@ -334,6 +334,11 @@ header {
     backdrop-filter: blur(10px);
 }
 
+/* Ensure controls show as flex when visible */
+#controls:not(.hidden) {
+    display: flex;
+}
+
 #controls button {
     width: 40px;
     height: 40px;
@@ -392,7 +397,6 @@ header {
     width: 100%;
     height: 100%;
     border-radius: 10px;
-    display: none;
 }
 
 #textViewer {
@@ -527,6 +531,66 @@ body.fileinfo-collapsed #fileinfoContent {
     background: #02a177;
 }
 
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Viewer base styles */
+.viewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 10px;
+}
+
+/* PDF Viewer */
+#pdfViewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 10px;
+}
+
+/* Office Viewer */
+#officeViewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 10px;
+}
+
+/* Text Viewer */
+.text-viewer {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    color: black;
+    padding: 20px;
+    overflow: auto;
+    text-align: left;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Image Viewer */
+.image-viewer {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
 /* Responsive design */
 @media (max-width: 1200px) {
     body {
@@ -557,5 +621,470 @@ body.fileinfo-collapsed #fileinfoContent {
     
     body.fileinfo-collapsed #fileinfo {
         height: 60px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN FOR MOBILE & TABLETS
+   ============================================ */
+
+/* Tablet devices (portrait) */
+@media (max-width: 1024px) {
+    body {
+        grid-template-columns: 1fr 1.5fr 250px;
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    header {
+        padding: 8px 15px;
+        flex-wrap: wrap;
+    }
+    
+    #searchContainer {
+        flex: 1 1 100%;
+        max-width: 100%;
+        order: 3;
+        margin-top: 10px;
+    }
+    
+    #filelist h1.original,
+    #fileinfoHeader h1.original {
+        font-size: 20px;
+    }
+    
+    #fileControls {
+        gap: 8px;
+    }
+    
+    #folderBackBtn, #folderForwardBtn, #delete {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+
+/* Tablet devices (landscape) and small laptops */
+@media (max-width: 900px) {
+    body {
+        grid-template-columns: 300px 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+    
+    body.fileinfo-collapsed {
+        grid-template-columns: 300px 1fr;
+    }
+    
+    #filelist {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    
+    #player {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    
+    #fileinfo {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        max-height: 250px;
+    }
+    
+    body.fileinfo-collapsed #fileinfo {
+        max-height: 60px;
+        width: 100% !important;
+    }
+    
+    #fileinfoContent {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    #fileinfoContent p {
+        flex: 0 1 calc(50% - 10px);
+        margin: 5px 0;
+    }
+}
+
+/* Mobile devices (large phones) */
+@media (max-width: 768px) {
+    body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr auto;
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    body.fileinfo-collapsed {
+        grid-template-columns: 1fr;
+    }
+    
+    header {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+    
+    #listFilesBtn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    #listFilesBtn .icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #listFilesBtn p {
+        display: none; /* Hide text on mobile */
+    }
+    
+    #exit {
+        width: 40px;
+        height: 40px;
+    }
+    
+    #exit .icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #searchContainer {
+        padding: 6px 12px;
+    }
+    
+    #searchInput {
+        font-size: 14px;
+    }
+    
+    #clearSearch {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+    
+    /* File list */
+    #filelist {
+        grid-column: 1;
+        grid-row: 2;
+        padding: 15px;
+        max-height: 250px;
+    }
+    
+    #filelist h1.original {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+    
+    #fileControls {
+        gap: 6px;
+    }
+    
+    #folderBackBtn, #folderForwardBtn, #delete {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    
+    #files li {
+        padding: 10px 12px;
+        margin: 6px 0;
+        font-size: 14px;
+    }
+    
+    /* Player */
+    #player {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: 300px;
+    }
+    
+    #controls {
+        bottom: 10px;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    
+    #controls button {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #controls button .icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    #audio {
+        width: 90%;
+        max-width: none;
+    }
+    
+    #canvas {
+        width: 90%;
+        max-width: none;
+        height: 150px;
+    }
+    
+    /* File info */
+    #fileinfo {
+        grid-column: 1;
+        grid-row: 4;
+        max-height: 200px;
+        width: 100% !important;
+    }
+    
+    body.fileinfo-collapsed #fileinfo {
+        height: 50px;
+        max-height: 50px;
+    }
+    
+    #fileinfoHeader {
+        padding: 12px 15px;
+    }
+    
+    #fileinfoHeader h1.original {
+        font-size: 18px;
+    }
+    
+    #toggleFileInfo {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    
+    #fileinfoContent {
+        padding: 12px 15px;
+    }
+    
+    #fileinfoContent p {
+        margin: 8px 0;
+        font-size: 13px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+        gap: 6px;
+    }
+    
+    header {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+    
+    #listFilesBtn {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    #listFilesBtn .icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    #exit {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #searchContainer {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+    
+    #searchInput {
+        font-size: 13px;
+        padding: 4px;
+    }
+    
+    #clearSearch {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+    
+    /* File list */
+    #filelist {
+        padding: 12px;
+        max-height: 200px;
+    }
+    
+    #filelist h1.original {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    #fileControls {
+        gap: 5px;
+    }
+    
+    #folderBackBtn, #folderForwardBtn, #delete {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    #delete .icon,
+    #folderBackBtn .icon,
+    #folderForwardBtn .icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    #files li {
+        padding: 8px 10px;
+        margin: 5px 0;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+    
+    /* Player */
+    #player {
+        min-height: 250px;
+    }
+    
+    #controls {
+        bottom: 8px;
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    
+    #controls button {
+        width: 32px;
+        height: 32px;
+    }
+    
+    #controls button .icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    #audio {
+        width: 95%;
+    }
+    
+    #canvas {
+        width: 95%;
+        height: 120px;
+    }
+    
+    /* File info */
+    #fileinfo {
+        max-height: 180px;
+    }
+    
+    body.fileinfo-collapsed #fileinfo {
+        height: 45px;
+        max-height: 45px;
+    }
+    
+    #fileinfoHeader {
+        padding: 10px 12px;
+    }
+    
+    #fileinfoHeader h1.original {
+        font-size: 16px;
+    }
+    
+    #toggleFileInfo {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    #fileinfoContent {
+        padding: 10px 12px;
+    }
+    
+    #fileinfoContent p {
+        margin: 6px 0;
+        font-size: 12px;
+    }
+    
+    #fileinfoContent span {
+        font-size: 12px;
+    }
+}
+
+/* Landscape orientation for mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+    body {
+        grid-template-columns: 250px 1fr 250px;
+        grid-template-rows: auto 1fr;
+    }
+    
+    body.fileinfo-collapsed {
+        grid-template-columns: 250px 1fr 50px;
+    }
+    
+    #filelist {
+        grid-column: 1;
+        grid-row: 2;
+        max-height: none;
+    }
+    
+    #player {
+        grid-column: 2;
+        grid-row: 2;
+        min-height: auto;
+    }
+    
+    #fileinfo {
+        grid-column: 3;
+        grid-row: 2;
+        max-height: none;
+    }
+    
+    body.fileinfo-collapsed #fileinfo {
+        width: 50px !important;
+        height: auto;
+        max-height: none;
+    }
+    
+    #fileinfoContent {
+        flex-direction: column;
+    }
+    
+    #fileinfoContent p {
+        flex: none;
+    }
+}
+
+/* Touch-friendly hover states for mobile */
+@media (hover: none) and (pointer: coarse) {
+    #files li:active {
+        background-color: #00DFA2;
+        border-color: #0079FF;
+        color: black !important;
+    }
+    
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    #controls button:active {
+        background-color: #02a177;
+    }
+    
+    #toggleFileInfo:active {
+        background-color: #02a177;
+        border-color: #02a177;
+    }
+}
+
+/* Prevent text selection on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        user-select: none;
+    }
+    
+    input, textarea {
+        user-select: text;
     }
 }

@@ -8,6 +8,11 @@ let previouslySelected = null;
 let navigationHistory = [];
 let currentHistoryIndex = -1;
 
+// Add these variables at the top of your file
+let lastTapTime = 0;
+let lastTapElement = null;
+const DOUBLE_TAP_DELAY = 300; // milliseconds
+
 // Open IndexedDB
 function openDatabase() {
     return new Promise((resolve, reject) => {
@@ -149,26 +154,359 @@ function getfreq(mediaElement) {
 
 // Helper function to hide all viewers
 function hideAllViewers() {
-    document.getElementById("video").style.display = "none";
-    document.getElementById("audio").style.display = "none";
-    document.getElementById("canvas").style.display = "none";
+    document.getElementById("video").classList.add('hidden');
+    document.getElementById("audio").classList.add('hidden');
+    document.getElementById("canvas").classList.add('hidden');
     
     const pdfViewer = document.getElementById("pdfViewer");
-    if (pdfViewer) pdfViewer.style.display = "none";
+    if (pdfViewer) pdfViewer.classList.add('hidden');
     
     const textViewer = document.getElementById("textViewer");
-    if (textViewer) textViewer.style.display = "none";
+    if (textViewer) textViewer.classList.add('hidden');
     
     const imageViewer = document.getElementById("imageViewer");
-    if (imageViewer) imageViewer.style.display = "none";
+    if (imageViewer) imageViewer.classList.add('hidden');
     
     const officeViewer = document.getElementById("officeViewer");
-    if (officeViewer) officeViewer.style.display = "none";
+    if (officeViewer) officeViewer.classList.add('hidden');
     
     // Pause any playing media
     document.getElementById("video").pause();
     document.getElementById("audio").pause();
 }
+
+// Helper function to open folders
+async function openFolder(entry, parentDirectoryHandle) {
+    try {
+        const subDirectoryHandle = await parentDirectoryHandle.getDirectoryHandle(entry.name);
+        await listFiles(subDirectoryHandle, true);
+    } catch (error) {
+        console.error("Error opening folder:", error);
+        alert("Failed to open folder: " + entry.name);
+    }
+}
+
+// Helper function to open files - REPLACE ENTIRE FUNCTION
+async function openFile(entry) {
+    try {
+        const file = await entry.getFile();
+        const fileURL = URL.createObjectURL(file);
+
+        // Hide all viewers first
+        hideAllViewers();
+
+        // Show/hide controls based on file type
+        const isMediaFile = file.type.startsWith("video/") || file.type.startsWith("audio/");
+        const controlsDiv = document.getElementById("controls");
+        if (controlsDiv) {
+            if (isMediaFile) {
+                controlsDiv.classList.remove('hidden');
+            } else {
+                controlsDiv.classList.add('hidden');
+            }
+        }
+
+        let mediaElement;
+        
+        // Handle video files
+        if (file.type.startsWith("video/")) {
+            console.log('🎥 Opening video:', file.name);
+            mediaElement = document.getElementById("video");
+            document.getElementById("canvas").classList.add('hidden');
+            mediaElement.classList.remove('hidden');
+            mediaElement.src = fileURL;
+            mediaElement.load();
+            await mediaElement.play().catch(err => console.error('Video play error:', err));
+        } 
+        // Handle audio files
+        else if (file.type.startsWith("audio/")) {
+            console.log('🎵 Opening audio:', file.name);
+            mediaElement = document.getElementById("audio");
+            document.getElementById("canvas").classList.remove('hidden');
+            getfreq(mediaElement);
+            mediaElement.classList.remove('hidden');
+            mediaElement.src = fileURL;
+            mediaElement.load();
+            await mediaElement.play().catch(err => console.error('Audio play error:', err));
+        }
+        // Handle PDF files
+        else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+            console.log('📄 Opening PDF:', file.name);
+            let pdfViewer = document.getElementById("pdfViewer");
+            if (!pdfViewer) {
+                pdfViewer = document.createElement("iframe");
+                pdfViewer.id = "pdfViewer";
+                pdfViewer.className = "viewer";
+                document.getElementById("player").appendChild(pdfViewer);
+            }
+            pdfViewer.src = fileURL;
+            pdfViewer.classList.remove('hidden');
+        }
+        // Handle Office documents
+        else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                 file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                 file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+                 file.name.toLowerCase().endsWith('.docx') ||
+                 file.name.toLowerCase().endsWith('.xlsx') ||
+                 file.name.toLowerCase().endsWith('.pptx') ||
+                 file.name.toLowerCase().endsWith('.doc') ||
+                 file.name.toLowerCase().endsWith('.xls') ||
+                 file.name.toLowerCase().endsWith('.ppt')) {
+            
+            console.log('📊 Opening Office document:', file.name);
+            await renderOfficeDocument(file, fileURL);
+        }
+        // Handle text files
+        else if (file.type.startsWith("text/") || 
+                 file.name.toLowerCase().endsWith('.txt') ||
+                 file.name.toLowerCase().endsWith('.md') ||
+                 file.name.toLowerCase().endsWith('.json') ||
+                 file.name.toLowerCase().endsWith('.xml') ||
+                 file.name.toLowerCase().endsWith('.csv') ||
+                 file.name.toLowerCase().endsWith('.log')) {
+            
+            console.log('📝 Opening text file:', file.name);
+            const text = await file.text();
+            let textViewer = document.getElementById("textViewer");
+            if (!textViewer) {
+                textViewer = document.createElement("pre");
+                textViewer.id = "textViewer";
+                textViewer.className = "viewer text-viewer";
+                document.getElementById("player").appendChild(textViewer);
+            }
+            textViewer.textContent = text;
+            textViewer.classList.remove('hidden');
+        }
+        // Handle image files
+        else if (file.type.startsWith("image/")) {
+            console.log('🖼️ Opening image:', file.name);
+            let imageViewer = document.getElementById("imageViewer");
+            if (!imageViewer) {
+                imageViewer = document.createElement("img");
+                imageViewer.id = "imageViewer";
+                imageViewer.className = "viewer image-viewer";
+                document.getElementById("player").appendChild(imageViewer);
+            }
+            imageViewer.src = fileURL;
+            imageViewer.classList.remove('hidden');
+        }
+        // Handle other file types
+        else {
+            console.log('📎 Opening unknown file type:', file.name);
+            // Try to download instead
+            const a = document.createElement('a');
+            a.href = fileURL;
+            a.download = file.name;
+            a.click();
+        }
+    } catch (error) {
+        console.error("❌ Error opening file:", error);
+        alert("Failed to open file: " + entry.name + "\nError: " + error.message);
+    }
+}
+
+// Function to render Office documents - REPLACE ENTIRE FUNCTION
+async function renderOfficeDocument(file, fileURL) {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    let officeViewer = document.getElementById("officeViewer");
+    if (!officeViewer) {
+        officeViewer = document.createElement("iframe");
+        officeViewer.id = "officeViewer";
+        officeViewer.className = "viewer";
+        document.getElementById("player").appendChild(officeViewer);
+    }
+    
+    // Remove hidden class
+    officeViewer.classList.remove('hidden');
+    
+    // Show loading message
+    officeViewer.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    font-family: Arial, sans-serif;
+                    background: #1a1a1a;
+                    color: white;
+                }
+                .loader {
+                    text-align: center;
+                }
+                .spinner {
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #0079FF;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="loader">
+                <div class="spinner"></div>
+                <p>Loading ${fileExtension.toUpperCase()} file...</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    try {
+        if (fileExtension === 'docx' || fileExtension === 'doc') {
+            await renderWordDocument(file, officeViewer);
+        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+            await renderExcelDocument(file, officeViewer);
+        } else if (fileExtension === 'pptx' || fileExtension === 'ppt') {
+            await renderPowerPointDocument(file, officeViewer, fileURL);
+        }
+    } catch (error) {
+        console.error("Error rendering Office document:", error);
+        officeViewer.srcdoc = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        font-family: Arial, sans-serif;
+                        background: #1a1a1a;
+                        color: white;
+                    }
+                    .container {
+                        text-align: center;
+                        max-width: 600px;
+                    }
+                    h2 { color: #FF4444; margin-bottom: 20px; }
+                    button {
+                        margin-top: 20px;
+                        padding: 12px 24px;
+                        background: #0079FF;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    }
+                    button:hover { background: #02a177; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>⚠️ Unable to render document</h2>
+                    <p>This ${fileExtension.toUpperCase()} file cannot be displayed in the browser.</p>
+                    <button onclick="downloadFile()">📥 Download File</button>
+                </div>
+                <script>
+                    function downloadFile() {
+                        window.parent.postMessage({type: 'download', url: '${fileURL}', name: '${file.name}'}, '*');
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+    }
+}
+
+// Update renderPowerPointDocument function
+async function renderPowerPointDocument(file, viewer, fileURL) {
+    viewer.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    font-family: Arial, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                .container {
+                    text-align: center;
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 40px;
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    max-width: 600px;
+                }
+                h2 { margin-bottom: 20px; }
+                .info { margin: 20px 0; font-size: 16px; }
+                .buttons { margin-top: 30px; }
+                button {
+                    margin: 10px;
+                    padding: 12px 30px;
+                    background: white;
+                    color: #667eea;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.3s;
+                }
+                button:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>📊 PowerPoint Presentation</h2>
+                <div class="info">
+                    <p><strong>File:</strong> ${file.name}</p>
+                    <p><strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+                <p>PowerPoint files require external viewer for full rendering.</p>
+                <div class="buttons">
+                    <button onclick="downloadFile()">💾 Download File</button>
+                    <button onclick="openWithOfficeOnline()">🌐 Open with Office Online</button>
+                </div>
+            </div>
+            <script>
+                function downloadFile() {
+                    window.parent.postMessage({type: 'download', url: '${fileURL}', name: '${file.name}'}, '*');
+                }
+                function openWithOfficeOnline() {
+                    alert('To view with Office Online, upload the file to OneDrive, Google Drive, or Dropbox and use their built-in viewers.');
+                }
+            </script>
+        </body>
+        </html>
+    `;
+}
+
+// Add message listener for downloads
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'download') {
+        const a = document.createElement('a');
+        a.href = event.data.url;
+        a.download = event.data.name;
+        a.click();
+    }
+});
 
 // Function to list files in the directory
 async function listFiles(directoryHandle = null, addToNav = true) {
@@ -202,7 +540,11 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 newFolder.textContent = "📁 " + entry.name;
                 newFolder.id = "folder" + folderno;
 
-                newFolder.addEventListener("click", function () {
+                newFolder.addEventListener("click", function (e) {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTapTime;
+                    
+                    // Single click/tap - show folder info
                     selectedfile = entry.name;
                     
                     if (previouslySelected) {
@@ -217,11 +559,17 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                     document.getElementById("filesize").innerText = "Folder";
                     document.getElementById("filetype").innerText = "Directory";
                     document.getElementById("filedate").innerText = "-";
-                });
-
-                newFolder.addEventListener("dblclick", async function () {
-                    const subDirectoryHandle = await directoryHandle.getDirectoryHandle(entry.name);
-                    await listFiles(subDirectoryHandle, true);
+                    
+                    // Double click/tap - open folder
+                    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0 && lastTapElement === newFolder) {
+                        e.preventDefault();
+                        openFolder(entry, directoryHandle);
+                        lastTapTime = 0; // Reset
+                        lastTapElement = null;
+                    } else {
+                        lastTapTime = currentTime;
+                        lastTapElement = newFolder;
+                    }
                 });
 
                 document.getElementById("files").appendChild(newFolder);
@@ -235,7 +583,11 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 // Store the entry reference
                 newItem.entryData = entry;
                 
-                newItem.addEventListener("click", async function () {
+                newItem.addEventListener("click", async function (e) {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTapTime;
+                    
+                    // Single click/tap - show file info
                     selectedfile = entry.name;
                     const file = await entry.getFile();
                     
@@ -251,118 +603,16 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                     document.getElementById("filesize").innerText = (file.size / 1024 / 1024).toFixed(2) + " MB";
                     document.getElementById("filetype").innerText = file.type || "Unknown";
                     document.getElementById("filedate").innerText = new Date(file.lastModified).toLocaleString();
-                });
-
-                newItem.addEventListener("dblclick", async function () {
-                    const file = await entry.getFile();
-                    const fileURL = URL.createObjectURL(file);
-
-                    // Hide all viewers first
-                    hideAllViewers();
-
-                    // Show/hide controls based on file type
-                    const isMediaFile = file.type.startsWith("video/") || file.type.startsWith("audio/");
-                    const controlsDiv = document.getElementById("controls");
-                    if (controlsDiv) {
-                        controlsDiv.style.display = isMediaFile ? "flex" : "none";
-                    }
-
-                    let mediaElement;
                     
-                    // Handle video files
-                    if (file.type.startsWith("video/")) {
-                        mediaElement = document.getElementById("video");
-                        document.getElementById("canvas").style.display = "none";
-                        mediaElement.style.display = "block";
-                        mediaElement.src = fileURL;
-                        mediaElement.play();
-                    } 
-                    // Handle audio files
-                    else if (file.type.startsWith("audio/")) {
-                        mediaElement = document.getElementById("audio");
-                        document.getElementById("canvas").style.display = "block";
-                        getfreq(mediaElement);
-                        mediaElement.style.display = "block";
-                        mediaElement.src = fileURL;
-                        mediaElement.play();
-                    }
-                    // Handle PDF files
-                    else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
-                        let pdfViewer = document.getElementById("pdfViewer");
-                        if (!pdfViewer) {
-                            pdfViewer = document.createElement("iframe");
-                            pdfViewer.id = "pdfViewer";
-                            pdfViewer.style.width = "100%";
-                            pdfViewer.style.height = "100%";
-                            pdfViewer.style.border = "none";
-                            pdfViewer.style.borderRadius = "10px";
-                            document.getElementById("player").appendChild(pdfViewer);
-                        }
-                        pdfViewer.src = fileURL;
-                        pdfViewer.style.display = "block";
-                    }
-                    // Handle Office documents (DOCX, XLSX, PPTX)
-                    else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-                             file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-                             file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-                             file.name.toLowerCase().endsWith('.docx') ||
-                             file.name.toLowerCase().endsWith('.xlsx') ||
-                             file.name.toLowerCase().endsWith('.pptx') ||
-                             file.name.toLowerCase().endsWith('.doc') ||
-                             file.name.toLowerCase().endsWith('.xls') ||
-                             file.name.toLowerCase().endsWith('.ppt')) {
-                        
-                        await renderOfficeDocument(file, fileURL);
-                    }
-                    // Handle text files
-                    else if (file.type.startsWith("text/") || 
-                             file.name.toLowerCase().endsWith('.txt') ||
-                             file.name.toLowerCase().endsWith('.md') ||
-                             file.name.toLowerCase().endsWith('.json') ||
-                             file.name.toLowerCase().endsWith('.xml') ||
-                             file.name.toLowerCase().endsWith('.csv') ||
-                             file.name.toLowerCase().endsWith('.log')) {
-                        
-                        const text = await file.text();
-                        let textViewer = document.getElementById("textViewer");
-                        if (!textViewer) {
-                            textViewer = document.createElement("pre");
-                            textViewer.id = "textViewer";
-                            textViewer.style.width = "100%";
-                            textViewer.style.height = "100%";
-                            textViewer.style.backgroundColor = "white";
-                            textViewer.style.color = "black";
-                            textViewer.style.padding = "20px";
-                            textViewer.style.overflow = "auto";
-                            textViewer.style.textAlign = "left";
-                            textViewer.style.whiteSpace = "pre-wrap";
-                            textViewer.style.wordWrap = "break-word";
-                            textViewer.style.borderRadius = "10px";
-                            textViewer.style.fontFamily = "monospace";
-                            textViewer.style.fontSize = "14px";
-                            document.getElementById("player").appendChild(textViewer);
-                        }
-                        textViewer.textContent = text;
-                        textViewer.style.display = "block";
-                    }
-                    // Handle image files
-                    else if (file.type.startsWith("image/")) {
-                        let imageViewer = document.getElementById("imageViewer");
-                        if (!imageViewer) {
-                            imageViewer = document.createElement("img");
-                            imageViewer.id = "imageViewer";
-                            imageViewer.style.maxWidth = "100%";
-                            imageViewer.style.maxHeight = "100%";
-                            imageViewer.style.objectFit = "contain";
-                            imageViewer.style.borderRadius = "10px";
-                            document.getElementById("player").appendChild(imageViewer);
-                        }
-                        imageViewer.src = fileURL;
-                        imageViewer.style.display = "block";
-                    }
-                    // Handle other file types
-                    else {
-                        window.open(fileURL, '_blank');
+                    // Double click/tap - open file
+                    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0 && lastTapElement === newItem) {
+                        e.preventDefault();
+                        await openFile(entry);
+                        lastTapTime = 0; // Reset
+                        lastTapElement = null;
+                    } else {
+                        lastTapTime = currentTime;
+                        lastTapElement = newItem;
                     }
                 });
 
@@ -387,71 +637,6 @@ async function deleteFile(directoryHandle, fileName) {
         });
     } catch (error) {
         console.error("Error deleting file:", error);
-    }
-}
-
-// Function to render Office documents
-async function renderOfficeDocument(file, fileURL) {
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    
-    let officeViewer = document.getElementById("officeViewer");
-    if (!officeViewer) {
-        officeViewer = document.createElement("iframe");
-        officeViewer.id = "officeViewer";
-        officeViewer.style.width = "100%";
-        officeViewer.style.height = "100%";
-        officeViewer.style.border = "none";
-        officeViewer.style.borderRadius = "10px";
-        document.getElementById("player").appendChild(officeViewer);
-    }
-    
-    // Show loading message
-    officeViewer.style.display = "block";
-    officeViewer.srcdoc = `
-        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
-            <div style="text-align: center;">
-                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #0079FF; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                <p style="margin-top: 20px;">Loading ${fileExtension.toUpperCase()} file...</p>
-            </div>
-            <style>
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            </style>
-        </div>
-    `;
-    
-    try {
-        if (fileExtension === 'docx' || fileExtension === 'doc') {
-            await renderWordDocument(file, officeViewer);
-        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-            await renderExcelDocument(file, officeViewer);
-        } else if (fileExtension === 'pptx' || fileExtension === 'ppt') {
-            await renderPowerPointDocument(file, officeViewer);
-        }
-    } catch (error) {
-        console.error("Error rendering Office document:", error);
-        officeViewer.srcdoc = `
-            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; padding: 20px;">
-                <div style="text-align: center; max-width: 600px;">
-                    <h2 style="color: #FF4444;">Unable to render document</h2>
-                    <p>This ${fileExtension.toUpperCase()} file cannot be displayed in the browser.</p>
-                    <button onclick="parent.postMessage('download', '*')" style="margin-top: 20px; padding: 10px 20px; background: #0079FF; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
-                        Download File
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        window.addEventListener('message', (event) => {
-            if (event.data === 'download') {
-                const a = document.createElement('a');
-                a.href = fileURL;
-                a.download = file.name;
-                a.click();
-            }
-        });
     }
 }
 
@@ -588,92 +773,6 @@ async function renderExcelDocument(file, viewer) {
         </body>
         </html>
     `;
-}
-
-// Render PowerPoint documents
-async function renderPowerPointDocument(file, viewer) {
-    viewer.srcdoc = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    font-family: Arial, sans-serif;
-                    margin: 0;
-                    padding: 20px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                }
-                .container {
-                    text-align: center;
-                    background: rgba(255, 255, 255, 0.1);
-                    padding: 40px;
-                    border-radius: 20px;
-                    backdrop-filter: blur(10px);
-                    max-width: 600px;
-                }
-                h2 {
-                    margin-bottom: 20px;
-                }
-                .info {
-                    margin: 20px 0;
-                    font-size: 16px;
-                }
-                .buttons {
-                    margin-top: 30px;
-                }
-                button {
-                    margin: 10px;
-                    padding: 12px 30px;
-                    background: white;
-                    color: #667eea;
-                    border: none;
-                    border-radius: 25px;
-                    cursor: pointer;
-                    font-size: 16px;
-                    font-weight: bold;
-                    transition: all 0.3s;
-                }
-                button:hover {
-                    transform: scale(1.05);
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h2>📊 PowerPoint Presentation</h2>
-                <div class="info">
-                    <p><strong>File:</strong> ${file.name}</p>
-                    <p><strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                </div>
-                <p>PowerPoint files require external viewer for full rendering.</p>
-                <div class="buttons">
-                    <button onclick="parent.postMessage('download', '*')">💾 Download File</button>
-                    <button onclick="openWithOfficeOnline()">🌐 Open with Office Online</button>
-                </div>
-            </div>
-            <script>
-                function openWithOfficeOnline() {
-                    alert('To view with Office Online, upload the file to OneDrive, Google Drive, or Dropbox and use their built-in viewers.');
-                }
-            </script>
-        </body>
-        </html>
-    `;
-    
-    window.addEventListener('message', (event) => {
-        if (event.data === 'download') {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(file);
-            a.download = file.name;
-            a.click();
-        }
-    });
 }
 
 // Helper function to load external scripts dynamically

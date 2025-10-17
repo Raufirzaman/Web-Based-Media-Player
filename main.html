@@ -9,7 +9,7 @@
 </head>
 <body>
     <header>
-        <div style="display: flex; gap: 10px; align-items: center;">
+        <div class="header-buttons">
             <button id="listFilesBtn"><img class="icon" src="home.png" alt="Home Icon"><p>Home</p></button>
             <a href="index.html"><button id="exit" title="Exit"><img src="logout.png" class="icon" alt="Logout Icon"></button></a>
         </div>
@@ -33,14 +33,14 @@
     </div>
 
     <div id="player">
-        <video id="video" controls style="display: none;"></video>
-        <audio id="audio" controls style="display: none;"></audio>
-        <canvas id="canvas" width="512" height="200" style="display: none;"></canvas>
+        <video id="video" controls class="hidden"></video>
+        <audio id="audio" controls class="hidden"></audio>
+        <canvas id="canvas" width="512" height="200" class="hidden"></canvas>
         
         <!-- Media controls - only visible for video/audio -->
-        <div id="controls" style="display: none;">
-            <button id="backward" title="Rewind 10s"><img src="backward.png" class="icon"></button>
-            <button id="forward" title="Forward 10s"><img src="forward.png" class="icon"></button>
+        <div id="controls" class="hidden">
+            <button id="backward" title="Rewind 10s"><img src="backward.png" class="icon" alt="Rewind Icon"></button>
+            <button id="forward" title="Forward 10s"><img src="forward.png" class="icon" alt="Forward Icon"></button>
         </div>
     </div>
 
