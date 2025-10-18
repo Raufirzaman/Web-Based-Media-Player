@@ -162,7 +162,7 @@ function hideAllViewers() {
     if (pdfViewer) pdfViewer.classList.add('hidden');
     
     const textViewer = document.getElementById("textViewer");
-    if (textViewer) textViewer.classList.add('hidden');
+    if (textViewer) pdfViewer.classList.add('hidden');
     
     const imageViewer = document.getElementById("imageViewer");
     if (imageViewer) imageViewer.classList.add('hidden');
@@ -180,6 +180,9 @@ async function openFolder(entry, parentDirectoryHandle) {
     try {
         const subDirectoryHandle = await parentDirectoryHandle.getDirectoryHandle(entry.name);
         await listFiles(subDirectoryHandle, true);
+        
+        // Keep panel open when navigating folders on mobile
+        // Don't close it automatically
     } catch (error) {
         console.error("Error opening folder:", error);
         alert("Failed to open folder: " + entry.name);
@@ -299,6 +302,12 @@ async function openFile(entry) {
             a.download = file.name;
             a.click();
         }
+        
+        // ============================================
+        // AUTO-CLOSE FILE PANEL ON MOBILE - ADD THIS
+        // ============================================
+        autoCloseFilePanelOnMobile();
+        
     } catch (error) {
         console.error("❌ Error opening file:", error);
         alert("Failed to open file: " + entry.name + "\nError: " + error.message);
@@ -620,6 +629,11 @@ async function listFiles(directoryHandle = null, addToNav = true) {
                 fileno++;
             }
         }
+        
+        // Show file panel on mobile when listing files (e.g., after clicking Home)
+        if (window.innerWidth <= 768) {
+            document.getElementById("filelist").classList.add("active");
+        }
     } catch (error) {
         console.error("Error fetching files:", error);
     }
@@ -932,16 +946,18 @@ document.addEventListener("keydown", function(e) {
     // Ctrl+F or Cmd+F to focus search
     if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
-        searchInput.focus();
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) searchInput.focus();
     }
     
     // Escape to clear search
-    if (e.key === "Escape" && document.activeElement === searchInput) {
-        clearSearchBtn.click();
+    if (e.key === "Escape" && document.activeElement === document.getElementById("searchInput")) {
+        const clearSearchBtn = document.getElementById("clearSearch");
+        if (clearSearchBtn) clearSearchBtn.click();
     }
     
     // Media control shortcuts (only when media is playing)
-    const activeMedia = document.querySelector("video:not([style*='display: none']), audio:not([style*='display: none'])");
+    const activeMedia = document.querySelector("video:not(.hidden), audio:not(.hidden)");
     
     if (activeMedia && document.activeElement.tagName !== "INPUT") {
         // Arrow Right: Forward 10 seconds
@@ -1002,8 +1018,136 @@ document.addEventListener("keydown", function(e) {
     // I: Toggle file info panel
     if ((e.key === "i" || e.key === "I") && document.activeElement.tagName !== "INPUT") {
         e.preventDefault();
-        document.getElementById("toggleFileInfo").click();
+        const toggleFileInfo = document.getElementById("toggleFileInfo");
+        if (toggleFileInfo) toggleFileInfo.click();
     }
 });
+
+/* filepath: /d:/bip bop/website/Web Based Media Player/main.js */
+
+// ============================================
+// TOGGLE FILE LIST PANEL - FINAL VERSION
+// Place this at the VERY END of main.js
+// ============================================
+
+window.addEventListener('load', function() {
+    console.log("🔧 Initializing toggle button...");
+    
+    const toggleBtn = document.getElementById("toggleFilelist");
+    const fileList = document.getElementById("filelist");
+    const toggleIcon = document.getElementById("toggleIcon");
+    const body = document.body;
+    
+    console.log("Elements found:", {
+        toggleBtn: !!toggleBtn,
+        fileList: !!fileList,
+        toggleIcon: !!toggleIcon
+    });
+    
+    if (!toggleBtn || !fileList || !toggleIcon) {
+        console.error("❌ Toggle elements not found!");
+        console.log("toggleBtn:", toggleBtn);
+        console.log("fileList:", fileList);
+        console.log("toggleIcon:", toggleIcon);
+        return;
+    }
+    
+    // Toggle button click handler
+    toggleBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log("🖱️ Toggle button clicked");
+        console.log("Window width:", window.innerWidth);
+        
+        if (window.innerWidth > 768) {
+            // ============ DESKTOP MODE ============
+            console.log("Mode: DESKTOP");
+            body.classList.toggle("filelist-hidden");
+            
+            if (body.classList.contains("filelist-hidden")) {
+                toggleIcon.textContent = "▶";
+                console.log("✅ Desktop: File list HIDDEN");
+            } else {
+                toggleIcon.textContent = "◀";
+                console.log("✅ Desktop: File list VISIBLE");
+            }
+        } else {
+            // ============ MOBILE MODE ============
+            console.log("Mode: MOBILE");
+            
+            // Toggle the active class
+            if (fileList.classList.contains("active")) {
+                fileList.classList.remove("active");
+                console.log("✅ Mobile: File list CLOSED");
+            } else {
+                fileList.classList.add("active");
+                console.log("✅ Mobile: File list OPENED");
+            }
+        }
+    });
+    
+    // Close when clicking backdrop on mobile
+    fileList.addEventListener("click", function(e) {
+        if (e.target === fileList && window.innerWidth <= 768) {
+            fileList.classList.remove("active");
+            console.log("✅ Mobile: Closed via backdrop");
+        }
+    });
+    
+    // Keyboard shortcut for L key
+    document.addEventListener("keydown", function(e) {
+        // L key: Toggle file list
+        if ((e.key === "l" || e.key === "L") && 
+            document.activeElement.tagName !== "INPUT" && 
+            document.activeElement.tagName !== "TEXTAREA") {
+            
+            e.preventDefault();
+            console.log("⌨️ L key pressed");
+            
+            if (window.innerWidth > 768) {
+                body.classList.toggle("filelist-hidden");
+                toggleIcon.textContent = body.classList.contains("filelist-hidden") ? "▶" : "◀";
+            } else {
+                fileList.classList.toggle("active");
+            }
+        }
+        
+        // Escape: Close on mobile
+        if (e.key === "Escape" && window.innerWidth <= 768) {
+            if (fileList.classList.contains("active")) {
+                fileList.classList.remove("active");
+                console.log("✅ Mobile: Closed via Escape");
+            }
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener("resize", function() {
+        if (window.innerWidth > 768) {
+            fileList.classList.remove("active");
+            toggleIcon.textContent = body.classList.contains("filelist-hidden") ? "▶" : "◀";
+        } else {
+            body.classList.remove("filelist-hidden");
+            toggleIcon.textContent = "◀";
+        }
+    });
+    
+    console.log("✅ Toggle button initialized successfully!");
+});
+
+// ============================================
+// AUTO-CLOSE FUNCTION
+// ============================================
+
+function autoCloseFilePanelOnMobile() {
+    if (window.innerWidth <= 768) {
+        const fileList = document.getElementById("filelist");
+        if (fileList && fileList.classList.contains("active")) {
+            fileList.classList.remove("active");
+            console.log("✅ Mobile: Auto-closed after opening file");
+        }
+    }
+}
 
 

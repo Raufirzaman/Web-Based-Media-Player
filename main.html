@@ -10,6 +10,10 @@
 <body>
     <header>
         <div class="header-buttons">
+            <!-- Toggle file panel button - NOW PROPERLY VISIBLE -->
+            <button id="toggleFilelist" title="Toggle File List">
+                <span id="toggleIcon">◀</span>
+            </button>
             <button id="listFilesBtn"><img class="icon" src="home.png" alt="Home Icon"><p>Home</p></button>
             <a href="index.html"><button id="exit" title="Exit"><img src="logout.png" class="icon" alt="Logout Icon"></button></a>
         </div>
@@ -20,7 +24,7 @@
         </div>
     </header>
     
-    <div id="filelist">
+    <div id="filelist" class="active">
         <h1 class="original">Files</h1>
         <div id="fileControls">
             <button id="folderBackBtn" title="Previous Folder" disabled>←</button>
